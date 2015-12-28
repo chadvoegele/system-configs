@@ -1,5 +1,6 @@
 # Maintainer: Chad Voegele <cavoegele@gmail.com>
-pkgname=system-configs
+_pkgname=system-configs
+pkgname=${_pkgname}-git
 pkgver=1.1
 pkgrel=1
 pkgdesc='system config'
@@ -8,6 +9,7 @@ url='https://github.com/chadvoegele/system-configs'
 license=('GPL')
 backup=()
 source=('git+https://github.com/chadvoegele/system-configs.git')
+md5sums=('SKIP')
 
 install_pkg() {
   if [[ -z "$1" ]]
@@ -23,11 +25,12 @@ install_pkg() {
     FILE_DEST_PKG="/"${FILE_SRC#*/}
     FILE_DEST=${FILE_DEST_PKG%.*}
     backup+=(${FILE_DEST})
-    install -D ${srcdir}/${FILE_SRC} ${pkgdir}/${FILE_DEST}
+    install -D ${FILE_SRC} ${pkgdir}/${FILE_DEST}
   done
 }
 
 package() {
+  cd ${srcdir}/${_pkgname}
   install_pkg "any"
   install_pkg ${HOSTNAME}
 }
