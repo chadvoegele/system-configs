@@ -1,0 +1,12 @@
+[Unit]
+Description=configure power settings
+After=multi-user.target suspend.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "echo 5 > /sys/module/snd_hda_intel/parameters/power_save"
+ExecStart=/bin/sh -c "echo 1500 > /proc/sys/vm/dirty_writeback_centisecs"
+ExecStart=/bin/sh -c "echo 5 > /proc/sys/vm/laptop_mode"
+
+[Install]
+WantedBy=multi-user.target suspend.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=Remove ssh-agents
+Before=sleep.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/su -c "source /home/%i/.ssh/ssh-agent.sh; /usr/bin/ssh-add -D" - %i
+
+[Install]
+WantedBy=sleep.target

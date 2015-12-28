@@ -1,0 +1,11 @@
+[Unit]
+Description=configure trackpoint sensitivity
+After=multi-user.target suspend.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "echo -n 250 > /sys/devices/platform/i8042/serio1/sensitivity"
+ExecStart=/bin/sh -c "echo -n 200 > /sys/devices/platform/i8042/serio1/speed"
+
+[Install]
+WantedBy=multi-user.target suspend.target
