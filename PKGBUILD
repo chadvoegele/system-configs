@@ -25,7 +25,7 @@ install_pkg() {
     FILE_DEST_PKG="/"${FILE_SRC#*/}
     FILE_DEST=${FILE_DEST_PKG%.*}
     backup+=(${FILE_DEST})
-    install -D ${FILE_SRC} ${pkgdir}/${FILE_DEST}
+    install -m 644 -D ${FILE_SRC} ${pkgdir}/${FILE_DEST}
   done
 }
 
