@@ -1,1 +1,2 @@
-KEYMAP="us"
+KEYMAP=us
+FONT=ter-v16b
