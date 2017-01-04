@@ -1,0 +1,6 @@
+Section "InputClass"
+    Identifier      "Surface Wacom"
+    MatchProduct    "Surface3 SPI Pen Input"
+    MatchDevicePath "/dev/input/event*"
+    Driver          "evdev"
+EndSection
