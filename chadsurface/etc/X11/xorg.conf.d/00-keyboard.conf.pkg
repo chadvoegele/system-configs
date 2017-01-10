@@ -1,0 +1,6 @@
+Section "InputClass"
+    Identifier "seyboard"
+		MatchIsKeyboard "on"
+    Option "XkbLayout" "us_prog"
+    Option "XKbOptions" "ctrl:nocaps"
+EndSection
