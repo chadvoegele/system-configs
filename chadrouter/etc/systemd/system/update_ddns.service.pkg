@@ -1,0 +1,11 @@
+[Unit]
+Description=Update Google Dynamic DNS
+After=network.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/ddns/secrets.env
+ExecStart=/bin/bash -c "curl --silent --show-error "https://${DDNS_USERNAME}:${DDNS_PASSWORD}@domains.google.com/nic/update?hostname=${DDNS_HOSTNAME}""
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=PPP link to %I
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/sbin/pppd call %I nodetach nolog
+
+[Install]
+WantedBy=multi-user.target

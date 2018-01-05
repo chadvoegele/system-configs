@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Update Google Dynamic DNS
+After=network-online.target
+
+[Timer]
+OnBootSec=30s
+OnUnitInactiveSec=1h
+
+[Install]
+WantedBy=timers.target

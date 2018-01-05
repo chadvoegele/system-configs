@@ -1,0 +1,6 @@
+[Match]
+Name=enp1s0f0
+
+[Network]
+DHCP=ipv4
+VLAN=enp1s0f0.201
