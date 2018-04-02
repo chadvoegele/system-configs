@@ -3,7 +3,6 @@ plugin rp-pppoe.so enp1s0f0.201
 user 'voegelechad377@qwest.net'
 hide-password
 mru 1492 mtu 1492
-usepeerdns
 persist
 ktune
 noipdefault
