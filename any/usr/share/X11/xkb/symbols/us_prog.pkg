@@ -1,7 +1,7 @@
 default
 partial alphanumeric_keys modifier_keys
 xkb_symbols "basic" {
-    name[Group1]= "USA";
+    name[Group1]= "USA Prog";
 
     // Alphanumeric section
     key <TLDE> { [   grave,         asciitilde                               ] };
@@ -58,14 +58,6 @@ xkb_symbols "basic" {
     key <CAPS> { [   Caps_Lock                                               ] };
     // End alphanumeric section
 
-    key <LALT> { [   Super_L                                                 ] };
-    key <RALT> { [   Super_R                                                 ] };
-    key <LWIN> { [   Alt_L,         Meta_L                                   ] };
-    key <RWIN> { [   Alt_R,         Meta_R                                   ] };
-
-    modifier_map Mod1 { <LWIN>, <RWIN> };
-    modifier_map Mod5 { <LALT>, <RALT> };
-
     key <RALT> {
         type[Group1]="ONE_LEVEL",
         symbols[Group1] = [ ISO_Level3_Shift ]
@@ -74,5 +66,9 @@ xkb_symbols "basic" {
         type[Group1]="ONE_LEVEL",
         symbols[Group1] = [ ISO_Level3_Shift ]
     };
-    modifier_map Mod5   { ISO_Level3_Shift };
+   replace key <LVL3> {
+     type[Group1] = "ONE_LEVEL",
+     symbols[Group1] = [ ISO_Level3_Shift ]
+   };
+   modifier_map Mod5 { <LVL3> };
 };
