@@ -1,7 +1,0 @@
-UUID=9c1d610c-4a22-4a7d-9461-81e7e274835d	/boot     	ext2      	rw,relatime	0 2
-UUID=ef66c44e-0a3a-4abe-927b-7cfa7457cbfb	none      	swap      	defaults  	0 0
-UUID=3344c6d9-4a0c-4017-b9c2-1356774a0727	/         	ext4      	rw,relatime,stripe=32618	0 1
-UUID=8902c876-541b-45eb-acdd-c09111f83e76	/home     	ext4      	rw,relatime	0 2
-UUID=1926fdcb-3b27-424f-bf33-2567cc97ce74	/mnt/z    	ext4      	rw,relatime	0 2
-UUID=08f49140-e465-423d-b184-f12285b7cd53	/mnt/y    	ext4      	rw,relatime	0 2
-UUID=06fe8379-e9c0-459c-a7ba-f6c644c4eefd	/mnt/share	ext4	      rw,relatime 0 2
