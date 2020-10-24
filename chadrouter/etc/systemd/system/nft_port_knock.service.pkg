@@ -1,6 +1,8 @@
 [Unit]
 Description=Setup nftables port knocking
-After=network.target
+After=network.target network-online.target
+Wants=network-online.target
+
 
 [Service]
 Type=oneshot
