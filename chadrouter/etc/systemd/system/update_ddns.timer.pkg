@@ -1,5 +1,5 @@
 [Unit]
-Description=Run Update Google Dynamic DNS
+Description=Run Update Dynamic DNS
 After=network-online.target
 
 [Timer]
