@@ -11,12 +11,12 @@ ExecStart=/usr/bin/nft add set nat clients_ipv4 { type ipv4_addr \; flags timeou
 ExecStart=/usr/bin/nft add set nat candidates_ipv4_2 { type ipv4_addr \; flags timeout \; }
 ExecStart=/usr/bin/nft add set nat candidates_ipv4_3 { type ipv4_addr \; flags timeout \; }
 ExecStart=/usr/bin/nft add set nat candidates_ipv4_4 { type ipv4_addr \; flags timeout \; }
-ExecStart=/usr/bin/nft add rule nat prerouting iifname $external_nic tcp dport $port1 ip saddr != @candidates_ipv4_2 add @candidates_ipv4_2 {ip saddr timeout 5s} log prefix "\"knocked port1 \"" drop
-ExecStart=/usr/bin/nft add rule nat prerouting iifname $external_nic tcp dport $port2 ip saddr != @candidates_ipv4_3 ip saddr @candidates_ipv4_2 add @candidates_ipv4_3 {ip saddr timeout 5s} log prefix "\"knocked port2 \"" drop
-ExecStart=/usr/bin/nft add rule nat prerouting iifname $external_nic tcp dport $port3 ip saddr != @candidates_ipv4_4 ip saddr @candidates_ipv4_3 add @candidates_ipv4_4 {ip saddr timeout 5s} log prefix "\"knocked port3 \"" drop
-ExecStart=/usr/bin/nft add rule nat prerouting iifname $external_nic tcp dport $port4 ip saddr != @clients_ipv4 ip saddr @candidates_ipv4_4 add @clients_ipv4 {ip saddr timeout 10s} log prefix "\"Successful portknock: \"" drop
-ExecStart=/usr/bin/nft add rule nat prerouting iifname $external_nic tcp dport ssh ip saddr @clients_ipv4 dnat $chaddesk_ip
-ExecStart=/usr/bin/nft add rule nat prerouting iifname $external_nic tcp dport ssh ct state established,related counter accept
+ExecStart=/usr/bin/nft add rule nat prerouting position 4 iifname $external_nic tcp dport $port1 ip saddr != @candidates_ipv4_2 add @candidates_ipv4_2 {ip saddr timeout 5s} log prefix "\"knocked port1 \"" drop
+ExecStart=/usr/bin/nft add rule nat prerouting position 4 iifname $external_nic tcp dport $port2 ip saddr != @candidates_ipv4_3 ip saddr @candidates_ipv4_2 add @candidates_ipv4_3 {ip saddr timeout 5s} log prefix "\"knocked port2 \"" drop
+ExecStart=/usr/bin/nft add rule nat prerouting position 4 iifname $external_nic tcp dport $port3 ip saddr != @candidates_ipv4_4 ip saddr @candidates_ipv4_3 add @candidates_ipv4_4 {ip saddr timeout 5s} log prefix "\"knocked port3 \"" drop
+ExecStart=/usr/bin/nft add rule nat prerouting position 4 iifname $external_nic tcp dport $port4 ip saddr != @clients_ipv4 ip saddr @candidates_ipv4_4 add @clients_ipv4 {ip saddr timeout 10s} log prefix "\"Successful portknock: \"" drop
+ExecStart=/usr/bin/nft add rule nat prerouting position 4 iifname $external_nic tcp dport $dport ip saddr @clients_ipv4 dnat ${chaddesk_ip}:22
+ExecStart=/usr/bin/nft add rule nat prerouting position 4 iifname $external_nic tcp dport $dport ct state established,related counter accept
 
 [Install]
 WantedBy=multi-user.target

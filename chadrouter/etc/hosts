@@ -1,13 +1,13 @@
 # Static table lookup for hostnames.
 # See hosts(5) for details.
 127.0.0.1  localhost
-192.168.10.90 chadhyper
-192.168.10.96 chadserver
-192.168.10.97 chaddesk
-192.168.10.1 chadrouter
-192.168.10.20 chadap0
-192.168.10.80 chadcam0
-192.168.10.10 chadswitch
-192.168.10.70 chadtv
-192.168.10.71 chadpi
-192.168.10.72 chadhubitat
+10.0.0.90 chadhyper
+10.0.0.96 chadserver
+10.0.0.97 chaddesk
+10.0.0.1 chadrouter
+10.0.0.20 chadap0
+10.0.0.80 chadcam0
+10.0.0.10 chadswitch
+10.0.0.70 chadtv
+10.0.0.71 chadpi
+10.0.0.72 chadhubitat
