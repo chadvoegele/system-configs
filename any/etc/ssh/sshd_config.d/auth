@@ -1,0 +1,8 @@
+PermitRootLogin no
+PubkeyAuthentication yes
+AuthenticationMethods  publickey,keyboard-interactive
+AuthorizedKeysFile      .ssh/authorized_keys
+PasswordAuthentication no
+PermitEmptyPasswords no
+ChallengeResponseAuthentication yes
+UsePAM yes
