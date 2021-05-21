@@ -7,12 +7,9 @@ persist
 ktune
 noipdefault
 defaultroute
-nobsdcomp
-novj
-nodeflate
-nopcomp
-noaccomp
 default-asyncmap
-lcp-echo-interval 6
+lcp-echo-interval 10
 lcp-echo-failure 10
-nomppe
+lcp-echo-adaptive
+holdoff 6
+maxfail 4
