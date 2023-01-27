@@ -6,7 +6,7 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 EnvironmentFile=/etc/ddns/secrets.env
-ExecStart=/bin/bash -c "MY_IP=`ip -4 address show dev $DDNS_DEV | grep inet | awk '{print $2}'`; if [[ -z $MY_IP ]]; then echo \"${DDNS_DEV} not found\"; exit 1; fi; DNS_IP=`dig +short $DDNS_HOSTNAME @1.1.1.1`; if [[ $MY_IP == $DNS_IP ]]; then echo \"No update\"; else echo \"Updating ddns to $MY_IP\"; aws route53 change-resource-record-sets --hosted-zone-id $DDNS_ZONE_ID --change-batch \"Changes=[{Action=UPSERT,ResourceRecordSet={ResourceRecords=[{Value=$MY_IP}],Name=$DDNS_HOSTNAME,Type=A,TTL=3600}}]\"; fi"
+ExecStart=/bin/bash -c "MY_IP=`ip -4 address show dev $DDNS_DEV | grep inet | awk '{print $2}' | awk -F/ '{print $1}'`; if [[ -z $MY_IP ]]; then echo \"${DDNS_DEV} not found\"; exit 1; fi; DNS_IP=`dig +short $DDNS_HOSTNAME @1.1.1.1`; if [[ $MY_IP == $DNS_IP ]]; then echo \"No update\"; else echo \"Updating ddns to $MY_IP\"; aws route53 change-resource-record-sets --hosted-zone-id $DDNS_ZONE_ID --change-batch \"Changes=[{Action=UPSERT,ResourceRecordSet={ResourceRecords=[{Value=$MY_IP}],Name=$DDNS_HOSTNAME,Type=A,TTL=3600}}]\"; fi"
 
 [Install]
 WantedBy=multi-user.target
