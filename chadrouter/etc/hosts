@@ -6,6 +6,7 @@
 10.0.0.97 chaddesk
 10.0.0.1 chadrouter
 10.0.0.20 chadap0
+10.0.0.21 chadap1
 10.0.0.80 chadcam0
 10.0.0.10 chadswitch
 10.0.0.70 chadtv
@@ -14,3 +15,4 @@
 10.0.0.73 snapcast0
 10.0.0.74 snapcast1
 10.0.0.75 snapcast2
+10.0.0.78 pikvm0
