@@ -1,6 +1,7 @@
 PermitRootLogin no
 PubkeyAuthentication yes
-AuthenticationMethods  publickey,keyboard-interactive
+KbdInteractiveAuthentication yes
+AuthenticationMethods  publickey,keyboard-interactive:pam
 AuthorizedKeysFile      .ssh/authorized_keys
 PasswordAuthentication no
 PermitEmptyPasswords no
