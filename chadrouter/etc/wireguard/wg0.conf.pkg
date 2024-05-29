@@ -1,0 +1,14 @@
+[Interface]
+Address = 192.168.0.1
+ListenPort = 51871
+PostUp = wg set %i private-key /etc/wireguard/%i.key
+
+# chadphone
+[Peer]
+PublicKey = AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+AllowedIPs = 192.168.0.100/32
+
+# chadlaptop
+[Peer]
+PublicKey = BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=
+AllowedIPs = 192.168.0.102/32
