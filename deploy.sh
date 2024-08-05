@@ -36,6 +36,12 @@ reverse_deploy() {
     DIREC="$1"
   fi
 
+  if [[ ! -d "${DIREC}" ]]
+  then
+    echo "${DIREC} does not exist! Skipping..."
+    return
+  fi
+
   for FILE in $(find ${DIREC} -type f -not -name "*.pkg")
   do
     FILE_DEST=${FILE}
