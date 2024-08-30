@@ -9,3 +9,9 @@ UUID=2872-EDD7      	/boot     	vfat      	rw,relatime,fmask=0022,dmask=0022,cod
 
 # /dev/mapper/vgswap-swap LABEL=swap
 UUID=b42ce597-cda7-494a-84dc-e671ae668409	none      	swap      	defaults  	0 0
+
+# /dev/mapper/z
+UUID=ddea6cd1-e5e1-4886-baee-7373d13bac91       /mnt/z          ext4            rw,relatime     0 2
+
+# /dev/mapper/share
+UUID=99b02529-9a31-4b53-9d77-f39314c86e1f       /mnt/share      ext4            rw,relatime     0 2
