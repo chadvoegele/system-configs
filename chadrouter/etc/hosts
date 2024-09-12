@@ -1,9 +1,9 @@
 # Static table lookup for hostnames.
 # See hosts(5) for details.
 127.0.0.1  localhost
-10.0.0.90 chadhyper
 10.0.0.96 chadserver
 10.0.0.97 chaddesk
+10.0.0.99 chaddev
 10.0.0.1 chadrouter
 10.0.0.20 chadap0
 10.0.0.21 chadap1
@@ -15,5 +15,5 @@
 10.0.0.73 snapcast0
 10.0.0.74 snapcast1
 10.0.0.75 snapcast2
-10.0.0.78 pikvm0
+10.0.0.78 chadpikvm0
 10.0.0.79 chadprinter
