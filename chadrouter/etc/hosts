@@ -1,9 +1,10 @@
 # Static table lookup for hostnames.
 # See hosts(5) for details.
-127.0.0.1  localhost
+127.0.0.1        localhost
+::1              localhost
 10.0.0.96 chadserver
-10.0.0.97 chaddesk
-10.0.0.99 chaddev
+10.0.0.97 chaddisk
+10.0.0.99 chadserver2
 10.0.0.1 chadrouter
 10.0.0.20 chadap0
 10.0.0.21 chadap1
