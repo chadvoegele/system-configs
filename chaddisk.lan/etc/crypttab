@@ -1,0 +1,3 @@
+cryptz         UUID=368ef562-e32d-46ad-a869-d882786e13b0    none                    timeout=180
+cryptshare     UUID=7341feed-e060-4155-bbc9-c69987460a36    none                    timeout=180
+cryptdocker    UUID=32a37367-b819-4448-bb7e-9c92c1fffd5e    none                    timeout=180
