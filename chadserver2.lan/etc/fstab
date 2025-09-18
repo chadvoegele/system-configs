@@ -1,0 +1,42 @@
+# Static information about the filesystems.
+# See fstab(5) for details.
+
+# <file system> <dir> <type> <options> <dump> <pass>
+# /dev/mapper/vgroot-root
+UUID=37580228-021b-48e2-b0b1-bac88422cbfe	/         	ext4      	rw,relatime	0 1
+
+# /dev/mapper/vgroot-home
+UUID=fbdc64be-0de9-4850-b353-62f9c2d7368e	/home     	ext4      	rw,relatime	0 2
+
+# /dev/sdb1
+UUID=8A7F-0DE2      	/boot     	vfat      	rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=ascii,shortname=mixed,utf8,errors=remount-ro	0 2
+
+# /dev/mapper/vgswap-swap LABEL=swap
+UUID=b42ce597-cda7-494a-84dc-e671ae668409	none      	swap      	defaults  	0 0
+
+# /dev/mapper/cryptz
+UUID=ddea6cd1-e5e1-4886-baee-7373d13bac91	/mnt/z     	ext4      	rw,relatime	0 2
+
+# /dev/mapper/cryptshare
+UUID=99b02529-9a31-4b53-9d77-f39314c86e1f     	/mnt/share	ext4      	rw,relatime	0 2
+
+# /dev/mapper/dockergroup-Dgit
+UUID=8d37b32f-c3d1-4f49-b020-14e9e2af7b82       /mnt/Dgit       ext4            rw,relatime     0 2
+
+# /dev/mapper/dockergroup-Dsynapse_data
+UUID=ec2d1aa1-a44b-4d5b-8c30-6310106e2dc2       /mnt/Dsynapse_data      ext4            rw,relatime     0 2
+
+# /dev/mapper/dockergroup-Dsyncthing
+UUID=177a4a03-a6b3-450a-8ad0-ee591cfd09a6       /mnt/Dsyncthing   ext4            rw,relatime     0 2
+
+# /dev/mapper/dockergroup-Dauthentik_custom----templates
+UUID=f3b47ce1-9853-47b2-b39d-3b6acde67336       /mnt/Dauthentik_custom--templates       ext4            rw,relatime       0 2
+
+# /dev/mapper/dockergroup-Dauthentik_media
+UUID=7a325c54-a530-42fb-b537-c3c50c25a988       /mnt/Dauthentik_media   ext4            rw,relatime     0 2
+
+# /dev/mapper/dockergroup-Dregistry
+UUID=3177d5e4-e8d8-471e-b79f-08f8235fa3e0       /mnt/Dregistry  ext4            rw,relatime     0 2
+
+# /dev/mapper/dockergroup-Djournal
+UUID=63b3c0cf-1ca7-4c2a-bfd3-d31672fb066a       /mnt/Djournal   ext4            rw,relatime     0 2
