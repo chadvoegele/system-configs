@@ -1,9 +1,0 @@
-# Static information about the filesystems.
-# See fstab(5) for details.
-# <file system> <dir> <type> <options> <dump> <pass>
-# UUID=4f99fdd5-3bbc-4dc6-8d7a-80221ff4997f
-UUID=4f99fdd5-3bbc-4dc6-8d7a-80221ff4997f        	/         	ext4      	rw,relatime,data=ordered	0 1
-UUID=8DB0-BCB9      					/boot     	vfat      	rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro	0 2
-UUID=747b4b36-ccd4-49f3-9586-ce712dff38e9       	/home     	ext4      	rw,relatime,data=ordered	0 2
-UUID=8c00c7f5-dc1a-48fb-8bb5-99821a94239c		      /mnt/z     	ext4      	rw,relatime,data=ordered	0 2
-UUID=f344be7c-0304-43c6-aea2-36aeb87903ab         /mnt/share 	ext4      	rw,relatime,data=ordered	0 2
