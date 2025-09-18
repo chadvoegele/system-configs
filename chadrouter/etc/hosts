@@ -3,7 +3,7 @@
 127.0.0.1        localhost
 ::1              localhost
 10.0.0.97 chaddisk
-10.0.0.99 chadserver2
+10.0.0.99 chadserver
 10.0.0.1 chadrouter
 10.0.0.20 chadap0
 10.0.0.21 chadap1
