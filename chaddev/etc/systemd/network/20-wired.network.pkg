@@ -1,5 +1,0 @@
-[Match]
-Name=eno3 eno4
-
-[Network]
-DHCP=yes
