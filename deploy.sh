@@ -2,7 +2,7 @@
 
 declare -r myname='config_deploy'
 
-deploy_non_pkg() {
+deploy() {
   if [[ -z "$1" ]]
   then
     echo "deploy requires directory parameter."
@@ -10,7 +10,7 @@ deploy_non_pkg() {
     DIREC="$1"
   fi
 
-  for FILE in $(find ${DIREC} -type f -not -name "*.pkg")
+  for FILE in $(find ${DIREC} -type f)
   do
     FILE_SRC=${FILE}
     FILE_DEST="/"${FILE_SRC#*/}
@@ -23,9 +23,9 @@ deploy_non_pkg() {
   done
 }
 
-deploy_non_pkg_all() {
-  deploy_non_pkg "any"
-  deploy_non_pkg ${HOSTNAME}
+deploy_all() {
+  deploy "any"
+  deploy ${HOSTNAME}
 }
 
 reverse_deploy() {
@@ -42,20 +42,10 @@ reverse_deploy() {
     return
   fi
 
-  for FILE in $(find ${DIREC} -type f -not -name "*.pkg")
+  for FILE in $(find ${DIREC} -type f)
   do
     FILE_DEST=${FILE}
     FILE_SRC="/"${FILE_DEST#*/}
-    if [[ -e ${FILE_SRC} ]]; then
-      cp -p ${FILE_SRC} ${FILE_DEST}
-    fi
-  done
-
-  for FILE in $(find ${DIREC} -type f -name "*.pkg")
-  do
-    FILE_DEST=${FILE}
-    FILE_SRC_PKG="/"${FILE_DEST#*/}
-    FILE_SRC=${FILE_SRC_PKG%.*}
     if [[ -e ${FILE_SRC} ]]; then
       cp -p ${FILE_SRC} ${FILE_DEST}
     fi
@@ -72,7 +62,7 @@ usage() {
 Usage: $myname [-d | -r]
 
 Options:
-  -d/--deploy        deploy non ".pkg" system configs
+  -d/--deploy        deploy system configs
   -r/--reverse       copy system configs back to repo for updating
 EOF
 }
@@ -92,7 +82,7 @@ while [[ -n "$1" ]]; do
 done
 
 if [[ $DEPLOY ]]; then
-  deploy_non_pkg_all
+  deploy_all
 elif [[ $REVERSE ]]; then
  reverse_deploy_all
 else
