@@ -22,15 +22,6 @@ deploy() {
   do
     FILE_SRC=${FILE}
     FILE_DEST="/"${FILE_SRC#*/}
-    set +e
-    OWNING_PACKAGE=$(pacman -Qoq ${FILE_DEST} 2>/dev/null)
-    if [[ $? -ne 0 ]]
-    then
-      echo "${FILE_DEST} is unowned"
-    else
-      echo "${FILE_DEST} owned by ${OWNING_PACKAGE}"
-    fi
-    set -e
 
     if [[ ${FORCE} == 1 ]]
     then
