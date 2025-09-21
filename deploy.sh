@@ -1,8 +1,11 @@
 #!/bin/bash
+set -e
 
 declare -r myname='config_deploy'
 
 deploy() {
+  local FORCE=0
+
   if [[ -z "$1" ]]
   then
     echo "deploy requires directory parameter."
@@ -10,30 +13,53 @@ deploy() {
     DIREC="$1"
   fi
 
+  if [[ -z "$2" ]]
+  then
+    FORCE="$2"
+  fi
+
   for FILE in $(find ${DIREC} -type f)
   do
     FILE_SRC=${FILE}
     FILE_DEST="/"${FILE_SRC#*/}
-    pacman -Qoq ${FILE_DEST} 1>/dev/null 2>/dev/null
-    if [[ $? -eq 0 ]]; then
+    set +e
+    OWNING_PACKAGE=$(pacman -Qoq ${FILE_DEST} 2>/dev/null)
+    if [[ $? -ne 0 ]]
+    then
+      echo "${FILE_DEST} is unowned"
+    else
+      echo "${FILE_DEST} owned by ${OWNING_PACKAGE}"
+    fi
+    set -e
+
+    if [[ ${FORCE} == 1 ]]
+    then
       cp -p ${FILE_SRC} ${FILE_DEST}
     else
-      echo "No package owns ${FILE_DEST}. Not installing!"
+      echo cp -p ${FILE_SRC} ${FILE_DEST}
     fi
   done
 }
 
 deploy_all() {
-  deploy "any"
-  deploy ${HOSTNAME}
+  local FORCE="$1"
+  deploy "any" "${FORCE}"
+  deploy ${HOSTNAME} "${FORCE}"
 }
 
 reverse_deploy() {
+  local FORCE=0
+
   if [[ -z "$1" ]]
   then
     echo "reverse_deploy requires directory parameter."
   else
     DIREC="$1"
+  fi
+
+  if [[ -z "$2" ]]
+  then
+    FORCE="$2"
   fi
 
   if [[ ! -d "${DIREC}" ]]
@@ -46,26 +72,33 @@ reverse_deploy() {
   do
     FILE_DEST=${FILE}
     FILE_SRC="/"${FILE_DEST#*/}
-    if [[ -e ${FILE_SRC} ]]; then
+    if [[ ${FORCE} == 1 ]]
+    then
       cp -p ${FILE_SRC} ${FILE_DEST}
+    else
+      echo cp -p ${FILE_SRC} ${FILE_DEST}
     fi
   done
 }
 
 reverse_deploy_all() {
-  reverse_deploy "any"
-  reverse_deploy ${HOSTNAME}
+  local FORCE="$1"
+  reverse_deploy "any" "${FORCE}"
+  reverse_deploy ${HOSTNAME} "${FORCE}"
 }
 
 usage() {
 	cat <<EOF
-Usage: $myname [-d | -r]
+Usage: $myname [-d | -r | -f]
 
 Options:
   -d/--deploy        deploy system configs
   -r/--reverse       copy system configs back to repo for updating
+  -f/--force         no dry run, actually copy
 EOF
 }
+
+FORCE=0
 
 while [[ -n "$1" ]]; do
 	case "$1" in
@@ -73,6 +106,8 @@ while [[ -n "$1" ]]; do
 			DEPLOY=1;;
 		-r|--reverse)
 			REVERSE=1;;
+		-f|--force)
+			FORCE=1;;
 		-h|--help)
 			usage; exit 0;;
 		*)
@@ -81,10 +116,17 @@ while [[ -n "$1" ]]; do
 	shift
 done
 
+if [[ ${FORCE} == 1 ]]
+then
+  echo "Running in copy mode"
+else
+  echo "Running in dry run mode"
+fi
+
 if [[ $DEPLOY ]]; then
-  deploy_all
+  deploy_all "${FORCE}"
 elif [[ $REVERSE ]]; then
- reverse_deploy_all
+ reverse_deploy_all "${FORCE}"
 else
   usage
 fi
