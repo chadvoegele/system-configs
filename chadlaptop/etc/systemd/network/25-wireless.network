@@ -1,8 +1,12 @@
 [Match]
 Name=wlan*
 
+[Link]
+Multicast=yes
+
 [Network]
 DHCP=yes
+MulticastDNS=yes
 
 [DHCPv4]
 RouteMetric=20
