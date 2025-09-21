@@ -20,7 +20,7 @@ deploy() {
     DIREC="$1"
   fi
 
-  if [[ -z "$2" ]]
+  if [[ -n "$2" ]]
   then
     FORCE="$2"
   fi
@@ -34,7 +34,7 @@ deploy() {
     then
       cp -p ${FILE_SRC} ${FILE_DEST}
     else
-      echo cp -p ${FILE_SRC} ${FILE_DEST}
+      echo "Would run: cp -p ${FILE_SRC} ${FILE_DEST}"
     fi
   done
 }
@@ -56,7 +56,7 @@ reverse_deploy() {
     DIREC="$1"
   fi
 
-  if [[ -z "$2" ]]
+  if [[ -n "$2" ]]
   then
     FORCE="$2"
   fi
@@ -71,11 +71,14 @@ reverse_deploy() {
   do
     FILE_DEST=${FILE}
     FILE_SRC="/"${FILE_DEST#*/}
-    if [[ ${FORCE} == 1 ]]
+    if [[ ${FORCE} == 0 ]]
+    then
+      echo "Would run: cp -p ${FILE_SRC} ${FILE_DEST}"
+    elif [[ -e ${FILE_SRC} ]]
     then
       cp -p ${FILE_SRC} ${FILE_DEST}
     else
-      echo cp -p ${FILE_SRC} ${FILE_DEST}
+      echo "${FILE_SRC} does not exist!"
     fi
   done
 }
@@ -151,9 +154,9 @@ fi
 if [[ $DEPLOY ]]; then
   deploy_all "${FORCE}"
 elif [[ $REVERSE ]]; then
- reverse_deploy_all "${FORCE}"
+  reverse_deploy_all "${FORCE}"
 elif [[ $NOTLOST ]]; then
- notlost_all
+  notlost_all
 else
   usage
 fi
