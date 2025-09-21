@@ -3,12 +3,19 @@ set -e
 
 declare -r myname='config_deploy'
 
+if [[ -z ${HOSTNAME} ]]
+then
+  echo "HOSTNAME not set!" >&2
+  exit 1
+fi
+
 deploy() {
   local FORCE=0
 
   if [[ -z "$1" ]]
   then
-    echo "deploy requires directory parameter."
+    echo "deploy requires directory parameter." >&2
+    exit 1
   else
     DIREC="$1"
   fi
@@ -43,7 +50,8 @@ reverse_deploy() {
 
   if [[ -z "$1" ]]
   then
-    echo "reverse_deploy requires directory parameter."
+    echo "reverse_deploy requires directory parameter." >&2
+    exit 1
   else
     DIREC="$1"
   fi
@@ -78,6 +86,29 @@ reverse_deploy_all() {
   reverse_deploy ${HOSTNAME} "${FORCE}"
 }
 
+notlost() {
+  if [[ -z "$1" ]]
+  then
+    echo "notlost requires directory parameter." >&2
+    exit 1
+  else
+    DIREC="$1"
+  fi
+
+  for FILE in $(find ${DIREC} -type f)
+  do
+    FILE_SRC=${FILE}
+    FILE_DEST="/"${FILE_SRC#*/}
+
+    echo ${FILE_DEST}
+  done
+}
+
+notlost_all() {
+  notlost "any"
+  notlost ${HOSTNAME}
+}
+
 usage() {
 	cat <<EOF
 Usage: $myname [-d | -r | -f]
@@ -85,6 +116,7 @@ Usage: $myname [-d | -r | -f]
 Options:
   -d/--deploy        deploy system configs
   -r/--reverse       copy system configs back to repo for updating
+  -n/--notlost       print files that are tracked to ignore in lostfiles
   -f/--force         no dry run, actually copy
 EOF
 }
@@ -97,6 +129,8 @@ while [[ -n "$1" ]]; do
 			DEPLOY=1;;
 		-r|--reverse)
 			REVERSE=1;;
+		-n|--notlost)
+			NOTLOST=1;;
 		-f|--force)
 			FORCE=1;;
 		-h|--help)
@@ -109,15 +143,17 @@ done
 
 if [[ ${FORCE} == 1 ]]
 then
-  echo "Running in copy mode"
+  echo "Running in copy mode" >&2
 else
-  echo "Running in dry run mode"
+  echo "Running in dry run mode" >&2
 fi
 
 if [[ $DEPLOY ]]; then
   deploy_all "${FORCE}"
 elif [[ $REVERSE ]]; then
  reverse_deploy_all "${FORCE}"
+elif [[ $NOTLOST ]]; then
+ notlost_all
 else
   usage
 fi
