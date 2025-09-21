@@ -32,9 +32,14 @@ deploy() {
 
     if [[ ${FORCE} == 1 ]]
     then
-      cp -p ${FILE_SRC} ${FILE_DEST}
+      DEST_DIR=$(dirname ${FILE_DEST})
+      if [[ ! -e "${DEST_DIR}" ]]
+      then
+        mkdir "${DEST_DIR}"
+      fi
+      cp -p "${FILE_SRC}" "${FILE_DEST}"
     else
-      echo "Would run: cp -p ${FILE_SRC} ${FILE_DEST}"
+      echo "For ${DIREC}, would run: cp -p ${FILE_SRC} ${FILE_DEST}"
     fi
   done
 }
@@ -73,7 +78,7 @@ reverse_deploy() {
     FILE_SRC="/"${FILE_DEST#*/}
     if [[ ${FORCE} == 0 ]]
     then
-      echo "Would run: cp -p ${FILE_SRC} ${FILE_DEST}"
+      echo "For ${DIREC}, would run: cp -p ${FILE_SRC} ${FILE_DEST}"
     elif [[ -e ${FILE_SRC} ]]
     then
       cp -p ${FILE_SRC} ${FILE_DEST}
