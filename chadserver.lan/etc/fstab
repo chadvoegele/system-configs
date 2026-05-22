@@ -40,3 +40,12 @@ UUID=3177d5e4-e8d8-471e-b79f-08f8235fa3e0       /mnt/Dregistry  ext4            
 
 # /dev/mapper/dockergroup-Djournal
 UUID=63b3c0cf-1ca7-4c2a-bfd3-d31672fb066a       /mnt/Djournal   ext4            rw,relatime     0 2
+
+# /dev/mapper/dockergroup-Dopenclaw
+UUID=d1e24b94-d7ab-454c-af81-16e7d49d058b	/mnt/Dopenclaw	ext4      	rw,relatime	0 2
+
+# /mnt/Dopenclaw/Sync/openclaw
+/mnt/Dopenclaw/Sync/openclaw	/srv/nfs/openclaw	none      	rw,bind   	0 0
+
+# /mnt/share/Sync/share
+/mnt/share/Sync/share	/srv/nfs/share	none      	rw,bind   	0 0

@@ -1,0 +1,15 @@
+table ip openclaw_restrict {
+  chain forward {
+    type filter hook forward priority -10; policy accept;
+
+    ct state established,related accept
+    iif lo accept
+    oif lo accept
+
+    ip saddr 172.19.0.0/16 ip daddr 172.19.0.20 tcp dport 3128 accept
+    ip saddr 172.19.0.20 ip daddr 172.19.0.10 accept
+    ip saddr 172.19.0.10 accept
+
+    ip saddr 172.19.0.0/16 drop
+  }
+}
