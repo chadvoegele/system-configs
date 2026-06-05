@@ -38,6 +38,7 @@ deploy() {
         mkdir "${DEST_DIR}"
       fi
       cp -p "${FILE_SRC}" "${FILE_DEST}"
+      echo "Ran: cp -p ${FILE_SRC} ${FILE_DEST}"
     else
       echo "For ${DIREC}, would run: cp -p ${FILE_SRC} ${FILE_DEST}"
     fi
@@ -82,6 +83,7 @@ reverse_deploy() {
     elif [[ -e ${FILE_SRC} ]]
     then
       cp -p ${FILE_SRC} ${FILE_DEST}
+      echo "Ran: cp -p ${FILE_SRC} ${FILE_DEST}"
     else
       echo "${FILE_SRC} does not exist!"
     fi
