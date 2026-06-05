@@ -1,2 +1,3 @@
 /srv/nfs/share  10.0.0.98(rw,sync,no_subtree_check)
 /srv/nfs/openclaw  10.0.0.98(rw,sync,no_subtree_check)
+/srv/nfs/txt  10.0.0.98(rw,sync,no_subtree_check)
