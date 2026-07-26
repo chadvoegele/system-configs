@@ -110,10 +110,11 @@ deploy() {
         rm -f "${TMP_FILE}"
       else
         cp -p "${FILE_SRC}" "${FILE_DEST}"
-        if [[ ${FILE_SRC} == */etc/wireguard/wg0.private.key ]]
-        then
-          chmod 600 "${FILE_DEST}"
-        fi
+      fi
+
+      if [[ ${FILE_SRC} == */etc/wireguard/wg0.conf || ${FILE_SRC} == */etc/wireguard/wg0.private.key ]]
+      then
+        chmod 600 "${FILE_DEST}"
       fi
       echo "Ran: cp -p ${FILE_SRC} ${FILE_DEST}"
     else
