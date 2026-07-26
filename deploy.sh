@@ -27,6 +27,7 @@ replace_wireguard_public_keys() {
         echo "Invalid WireGuard public key in ${KEY_FILE}" >&2
         return 1
       fi
+      echo "Replacing ${PUBLIC_KEY_TOKEN} in ${FILE}"
       sed -i "s|^PublicKey = ${PUBLIC_KEY_TOKEN}$|PublicKey = ${PUBLIC_KEY}|" "${FILE}"
     fi
   done
@@ -48,8 +49,9 @@ redact_wireguard_public_keys() {
     PUBLIC_KEY=$(<"${KEY_FILE}")
     PUBLIC_KEY_TOKEN=${wireguard_public_key_prefix}${PEER_HOST}
 
-    if [[ ${PUBLIC_KEY} =~ ^[A-Za-z0-9+/]{43}=$ ]]
+    if [[ ${PUBLIC_KEY} =~ ^[A-Za-z0-9+/]{43}=$ ]] && grep -qF "PublicKey = ${PUBLIC_KEY}" "${FILE}"
     then
+      echo "Redacting WireGuard public key for ${PEER_HOST} in ${FILE}"
       sed -i "s|^PublicKey = ${PUBLIC_KEY}$|PublicKey = ${PUBLIC_KEY_TOKEN}|" "${FILE}"
     fi
   done
