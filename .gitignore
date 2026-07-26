@@ -1,0 +1,2 @@
+# Host-local WireGuard private keys and peer definitions.
+**/etc/wireguard/*.keys.conf
