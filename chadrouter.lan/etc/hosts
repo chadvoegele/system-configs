@@ -4,7 +4,8 @@
 ::1              localhost
 10.0.0.97 chaddisk
 10.0.0.98 chaddev
-10.0.0.99 chadserver
+10.0.0.99 chadserver home.voegele.me mautrix-wsproxy-imessage.voegele.me
+10.0.0.96 code.voegele.me
 10.0.0.1 chadrouter
 10.0.0.20 chadap0
 10.0.0.21 chadap1
