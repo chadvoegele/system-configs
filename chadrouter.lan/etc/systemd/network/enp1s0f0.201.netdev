@@ -1,9 +1,0 @@
-[Match]
-Virtualization=no
-
-[NetDev]
-Name=enp1s0f0.201
-Kind=vlan
-
-[VLAN]
-Id=201

@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+shopt -s nullglob
 
 declare -r myname='config_deploy'
 declare -r wireguard_public_key_prefix='PUBLIC_KEY_'
@@ -43,6 +44,12 @@ redact_wireguard_public_keys() {
   local FILE="$1"
   local KEY_FILE PEER_HOST PUBLIC_KEY PUBLIC_KEY_TOKEN
 
+  if grep -Eq '^[[:space:]]*PrivateKey[[:space:]]*=' "${FILE}"
+  then
+    echo "Refusing to copy inline WireGuard private key from ${FILE}" >&2
+    return 1
+  fi
+
   for KEY_FILE in *.lan/etc/wireguard/wg0.public.key
   do
     PEER_HOST=${KEY_FILE%%/*}
@@ -65,6 +72,7 @@ redact_wireguard_public_keys() {
 
 deploy() {
   local FORCE=0
+  local DEST_DIR DIREC FILE FILE_DEST FILE_SRC TMP_FILE
 
   if [[ -z "$1" ]]
   then
@@ -79,7 +87,7 @@ deploy() {
     FORCE="$2"
   fi
 
-  for FILE in $(find ${DIREC} -type f)
+  while IFS= read -r -d '' FILE
   do
     if [[ ${FILE} == */etc/wireguard/wg0.public.key ]]
     then
@@ -91,16 +99,16 @@ deploy() {
 
     if [[ ${FORCE} == 1 ]]
     then
-      DEST_DIR=$(dirname ${FILE_DEST})
+      DEST_DIR=$(dirname "${FILE_DEST}")
       if [[ ! -e "${DEST_DIR}" ]]
       then
-        mkdir "${DEST_DIR}"
+        mkdir -p "${DEST_DIR}"
       fi
 
       if [[ ${FILE_SRC} == */etc/wireguard/wg0.conf ]]
       then
         TMP_FILE=$(mktemp)
-        cp -p "${FILE_SRC}" "${TMP_FILE}"
+        cp "${FILE_SRC}" "${TMP_FILE}"
 
         if ! replace_wireguard_public_keys "${TMP_FILE}"
         then
@@ -108,31 +116,39 @@ deploy() {
           exit 1
         fi
 
-        cp -p "${TMP_FILE}" "${FILE_DEST}"
+        install -o root -g root -m 600 "${TMP_FILE}" "${FILE_DEST}"
         rm -f "${TMP_FILE}"
+      elif [[ ${FILE_SRC} == */etc/wireguard/wg0.private.key ]]
+      then
+        install -o root -g root -m 600 "${FILE_SRC}" "${FILE_DEST}"
       else
-        cp -p "${FILE_SRC}" "${FILE_DEST}"
+        install -o root -g root -m "$(stat -c '%a' "${FILE_SRC}")" "${FILE_SRC}" "${FILE_DEST}"
       fi
 
-      if [[ ${FILE_SRC} == */etc/wireguard/wg0.conf || ${FILE_SRC} == */etc/wireguard/wg0.private.key ]]
-      then
-        chmod 600 "${FILE_DEST}"
-      fi
-      echo "Ran: cp -p ${FILE_SRC} ${FILE_DEST}"
+      echo "Installed: ${FILE_SRC} -> ${FILE_DEST}"
     else
-      echo "For ${DIREC}, would run: cp -p ${FILE_SRC} ${FILE_DEST}"
+      echo "For ${DIREC}, would install: ${FILE_SRC} -> ${FILE_DEST}"
     fi
-  done
+  done < <(find "${DIREC}" -type f -print0)
 }
 
 deploy_all() {
   local FORCE="$1"
+
   deploy "any" "${FORCE}"
-  deploy ${HOSTNAME} "${FORCE}"
+
+  if [[ ! -d ${HOSTNAME} ]]
+  then
+    echo "No configuration directory for HOSTNAME=${HOSTNAME}; skipping host-specific configuration" >&2
+    return
+  fi
+
+  deploy "${HOSTNAME}" "${FORCE}"
 }
 
 reverse_deploy() {
   local FORCE=0
+  local DIREC FILE FILE_DEST FILE_SRC TMP_FILE
 
   if [[ -z "$1" ]]
   then
@@ -153,7 +169,7 @@ reverse_deploy() {
     return
   fi
 
-  for FILE in $(find ${DIREC} -type f)
+  while IFS= read -r -d '' FILE
   do
     if [[ ${FILE} == */etc/wireguard/wg0.public.key ]]
     then
@@ -164,13 +180,13 @@ reverse_deploy() {
     FILE_SRC="${CONFIG_ROOT}/"${FILE_DEST#*/}
     if [[ ${FORCE} == 0 ]]
     then
-      echo "For ${DIREC}, would run: cp -p ${FILE_SRC} ${FILE_DEST}"
+      echo "For ${DIREC}, would copy: ${FILE_SRC} -> ${FILE_DEST}"
     elif [[ -e ${FILE_SRC} ]]
     then
       if [[ ${FILE_DEST} == */etc/wireguard/wg0.conf ]]
       then
         TMP_FILE=$(mktemp)
-        cp -p "${FILE_SRC}" "${TMP_FILE}"
+        cp "${FILE_SRC}" "${TMP_FILE}"
 
         if ! redact_wireguard_public_keys "${TMP_FILE}"
         then
@@ -178,25 +194,27 @@ reverse_deploy() {
           exit 1
         fi
 
-        cp -p "${TMP_FILE}" "${FILE_DEST}"
+        cp "${TMP_FILE}" "${FILE_DEST}"
         rm -f "${TMP_FILE}"
       else
-        cp -p "${FILE_SRC}" "${FILE_DEST}"
+        cp "${FILE_SRC}" "${FILE_DEST}"
       fi
-      echo "Ran: cp -p ${FILE_SRC} ${FILE_DEST}"
+      echo "Copied: ${FILE_SRC} -> ${FILE_DEST}"
     else
       echo "${FILE_SRC} does not exist!"
     fi
-  done
+  done < <(find "${DIREC}" -type f -print0)
 }
 
 reverse_deploy_all() {
   local FORCE="$1"
   reverse_deploy "any" "${FORCE}"
-  reverse_deploy ${HOSTNAME} "${FORCE}"
+  reverse_deploy "${HOSTNAME}" "${FORCE}"
 }
 
 notlost() {
+  local DIREC FILE FILE_DEST FILE_SRC
+
   if [[ -z "$1" ]]
   then
     echo "notlost requires directory parameter." >&2
@@ -205,7 +223,13 @@ notlost() {
     DIREC="$1"
   fi
 
-  for FILE in $(find ${DIREC} -type f)
+  if [[ ! -d ${DIREC} ]]
+  then
+    echo "${DIREC} does not exist! Skipping..." >&2
+    return
+  fi
+
+  while IFS= read -r -d '' FILE
   do
     if [[ ${FILE} == */etc/wireguard/wg0.public.key ]]
     then
@@ -215,13 +239,13 @@ notlost() {
     FILE_SRC=${FILE}
     FILE_DEST="/"${FILE_SRC#*/}
 
-    echo ${FILE_DEST}
-  done
+    echo "${FILE_DEST}"
+  done < <(find "${DIREC}" -type f -print0)
 }
 
 notlost_all() {
   notlost "any"
-  notlost ${HOSTNAME}
+  notlost "${HOSTNAME}"
 }
 
 usage() {

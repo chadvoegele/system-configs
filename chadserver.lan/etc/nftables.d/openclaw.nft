@@ -1,4 +1,11 @@
+destroy table ip openclaw_restrict
 table ip openclaw_restrict {
+  chain input {
+    type filter hook input priority -10; policy accept;
+
+    ip saddr 172.19.0.0/16 drop
+  }
+
   chain forward {
     type filter hook forward priority -10; policy accept;
 
