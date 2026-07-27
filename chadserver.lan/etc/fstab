@@ -49,3 +49,6 @@ UUID=d1e24b94-d7ab-454c-af81-16e7d49d058b	/mnt/Dopenclaw	ext4      	rw,relatime	
 
 # /mnt/share/Sync/share
 /mnt/share/Sync/share	/srv/nfs/share	none      	rw,bind   	0 0
+
+# /dev/mapper/dockergroup-Dforgejo
+UUID=804c856b-3406-4427-a9cd-be14a3e84516	/mnt/Dforgejo	ext4      	rw,relatime	0 2
