@@ -1,3 +1,6 @@
 # Host-local WireGuard key material.
 **/etc/wireguard/*.private.key
 **/etc/wireguard/*.public.key
+
+# Local feature worktrees.
+worktrees/
