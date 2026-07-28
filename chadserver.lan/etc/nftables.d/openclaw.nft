@@ -3,6 +3,7 @@ table ip openclaw_restrict {
   chain input {
     type filter hook input priority -10; policy accept;
 
+    ip saddr 172.19.0.0/16 ip daddr 10.0.0.99 tcp dport https accept comment "allow OpenClaw to Matrix"
     ip saddr 172.19.0.0/16 drop
   }
 
