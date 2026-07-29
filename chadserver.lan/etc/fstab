@@ -51,3 +51,6 @@ UUID=d1e24b94-d7ab-454c-af81-16e7d49d058b	/mnt/Dopenclaw	ext4      	rw,relatime	
 
 # /dev/mapper/dockergroup-Dforgejo
 UUID=804c856b-3406-4427-a9cd-be14a3e84516	/mnt/Dforgejo	ext4      	rw,relatime	0 2
+
+# /dev/mapper/dockergroup-Dauthentik_data
+UUID=f96bcf68-72fd-4165-a7f8-f1744a728bb1	/mnt/Dauthentik_data	ext4      	rw,relatime	0 2
