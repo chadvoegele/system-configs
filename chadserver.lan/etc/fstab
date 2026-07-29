@@ -32,9 +32,6 @@ UUID=177a4a03-a6b3-450a-8ad0-ee591cfd09a6       /mnt/Dsyncthing   ext4          
 # /dev/mapper/dockergroup-Dauthentik_custom----templates
 UUID=f3b47ce1-9853-47b2-b39d-3b6acde67336       /mnt/Dauthentik_custom--templates       ext4            rw,relatime       0 2
 
-# /dev/mapper/dockergroup-Dauthentik_media
-UUID=7a325c54-a530-42fb-b537-c3c50c25a988       /mnt/Dauthentik_media   ext4            rw,relatime     0 2
-
 # /dev/mapper/dockergroup-Dregistry
 UUID=3177d5e4-e8d8-471e-b79f-08f8235fa3e0       /mnt/Dregistry  ext4            rw,relatime     0 2
 
