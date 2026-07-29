@@ -44,11 +44,10 @@ UUID=63b3c0cf-1ca7-4c2a-bfd3-d31672fb066a       /mnt/Djournal   ext4            
 # /dev/mapper/dockergroup-Dopenclaw
 UUID=d1e24b94-d7ab-454c-af81-16e7d49d058b	/mnt/Dopenclaw	ext4      	rw,relatime	0 2
 
-# /mnt/Dopenclaw/Sync/openclaw
 /mnt/Dopenclaw/Sync/openclaw	/srv/nfs/openclaw	none      	rw,bind   	0 0
-
-# /mnt/share/Sync/share
 /mnt/share/Sync/share	/srv/nfs/share	none      	rw,bind   	0 0
+/mnt/z/Sync	/srv/nfs/z	none      	rw,bind   	0 0
+/home/chad/txt   /srv/nfs/txt    none	rw,bind   	0 0
 
 # /dev/mapper/dockergroup-Dforgejo
 UUID=804c856b-3406-4427-a9cd-be14a3e84516	/mnt/Dforgejo	ext4      	rw,relatime	0 2
