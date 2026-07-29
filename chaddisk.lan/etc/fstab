@@ -29,8 +29,5 @@ UUID=4aa63d78-bc15-4a86-8c35-a3a56b0ccf4a       /mnt/Dsynapse_data      ext4    
 # /dev/mapper/dockergroup-Dauthentik_custom----templates
 UUID=473ffd29-36db-4dba-8f1e-ae20e480ee1d       /mnt/Dauthentik_custom--templates       ext4            rw,relatime,stripe=4095    0 2
 
-# /dev/mapper/dockergroup-Dauthentik_media
-UUID=1696b3e2-b3a5-4df3-b451-2787a0ad5b68       /mnt/Dauthentik_media   ext4            rw,relatime,stripe=4095    0 2
-
 # /dev/mapper/dockergroup-Dauthentik_data
 UUID=dfc65f62-9d61-4d11-a5d2-8e8df2fcf6b8	/mnt/Dauthentik_data	ext4      	rw,relatime,stripe=4095	0 2
