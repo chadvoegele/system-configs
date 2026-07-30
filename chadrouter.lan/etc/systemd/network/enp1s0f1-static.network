@@ -3,3 +3,42 @@ Name=enp1s0f1
 
 [Network]
 Address=10.0.0.1/16
+
+# Use specific routes from the main table, but leave default routing to the
+# per-WAN DHCP tables below.
+[RoutingPolicyRule]
+Table=main
+Priority=50
+SuppressPrefixLength=0
+
+# Mark 1 prefers enp1s0f0 and fails over to eno1.
+[RoutingPolicyRule]
+FirewallMark=1
+Table=100
+Priority=100
+
+[RoutingPolicyRule]
+FirewallMark=1
+Table=200
+Priority=101
+
+# Mark 2 prefers eno1 and fails over to enp1s0f0.
+[RoutingPolicyRule]
+FirewallMark=2
+Table=200
+Priority=100
+
+[RoutingPolicyRule]
+FirewallMark=2
+Table=100
+Priority=101
+
+# Unmarked traffic prefers enp1s0f0. This also gives existing connections a
+# route when the policy is first deployed.
+[RoutingPolicyRule]
+Table=100
+Priority=30000
+
+[RoutingPolicyRule]
+Table=200
+Priority=30001

@@ -1,9 +1,9 @@
 [Match]
-Name=enp1s0f0
+Name=eno1
 
 [Network]
 DHCP=ipv4
 
 [DHCPv4]
 # Keep this ISP's dynamic routes separate for firewall-mark policy routing.
-RouteTable=100
+RouteTable=200
