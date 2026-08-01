@@ -4,14 +4,11 @@ Name=enp1s0f1
 [Network]
 Address=10.0.0.1/16
 
-# Use specific routes from the main table, but leave default routing to the
-# per-WAN DHCP tables below.
 [RoutingPolicyRule]
 Table=main
 Priority=50
 SuppressPrefixLength=0
 
-# Mark 1 prefers fiber and fails over to cable.
 [RoutingPolicyRule]
 FirewallMark=1
 Table=fiber
@@ -22,7 +19,6 @@ FirewallMark=1
 Table=cable
 Priority=101
 
-# Mark 2 prefers cable and fails over to fiber.
 [RoutingPolicyRule]
 FirewallMark=2
 Table=cable
@@ -33,8 +29,6 @@ FirewallMark=2
 Table=fiber
 Priority=101
 
-# Unmarked traffic prefers fiber. This also gives existing connections a route
-# when the policy is first deployed.
 [RoutingPolicyRule]
 Table=fiber
 Priority=30000

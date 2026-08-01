@@ -5,5 +5,4 @@ Name=eno1
 DHCP=ipv4
 
 [DHCPv4]
-# Keep cable's dynamic routes separate for firewall-mark policy routing.
 RouteTable=cable
