@@ -1,0 +1,9 @@
+# Reserved values
+255 local
+254 main
+253 default
+0 unspec
+
+# chadrouter WAN policy-routing tables
+100 fiber
+200 cable
