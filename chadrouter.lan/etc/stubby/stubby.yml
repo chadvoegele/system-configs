@@ -18,6 +18,10 @@ listen_addresses:
   -  0::1@53000
 
 upstream_recursive_servers:
+  - address_data: 9.9.9.9
+    tls_auth_name: "dns.quad9.net"
+  - address_data: 149.112.112.112
+    tls_auth_name: "dns.quad9.net"
   - address_data: 1.1.1.1
     tls_auth_name: "cloudflare-dns.com"
     idle_timeout: 9000
