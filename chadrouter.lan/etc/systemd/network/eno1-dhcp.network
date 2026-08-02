@@ -1,8 +1,8 @@
 [Match]
-Name=enp1s0f0
+Name=eno1
 
 [Network]
 DHCP=ipv4
 
 [DHCPv4]
-RouteTable=fiber
+RouteTable=cable
