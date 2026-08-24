@@ -20,9 +20,6 @@ UUID=145aca44-ce6c-4233-b1c7-625c5e03048a       /mnt/z          ext4            
 # /dev/mapper/cryptshare
 UUID=515b2409-4914-421e-ad54-b015292a510c       /mnt/share      ext4            rw,relatime     0 2
 
-# /dev/mapper/dockergroup-Dgit
-UUID=b745308e-172f-4ee4-ab2e-68582e852795       /mnt/Dgit       ext4            rw,relatime,stripe=4095 0 2
-
 # /dev/mapper/dockergroup-Dsynapse_data
 UUID=4aa63d78-bc15-4a86-8c35-a3a56b0ccf4a       /mnt/Dsynapse_data      ext4            rw,relatime,stripe=4095    0 2
 
