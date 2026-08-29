@@ -1,0 +1,18 @@
+# /dev/mapper/vg0-root
+UUID=1fb64c21-b653-4d79-9efa-9d6d07ac964f	/         	ext4      	rw,relatime	0 1
+
+# /dev/mapper/vg0-home
+UUID=5f1fa6d0-4d1c-4f6e-9ec9-e4777c1752e1	/home     	ext4      	rw,relatime	0 2
+
+# /dev/nvme0n1p1
+UUID=39AC-D411      	/boot     	vfat      	rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=ascii,shortname=mixed,utf8,errors=remount-ro	0 2
+
+# /dev/mapper/vg0-swap
+UUID=5e0362d1-bd4e-4cde-a538-7ccb15cc95d1	none      	swap      	defaults  	0 0
+
+# NFS volumes from chadserver.lan.
+chadserver.lan:/srv/nfs/share    /mnt/chadserver.lan/share    nfs4    rw,x-systemd.automount,x-systemd.mount-timeout=30,_netdev    0 0
+chadserver.lan:/srv/nfs/openclaw /mnt/chadserver.lan/openclaw nfs4    rw,x-systemd.automount,x-systemd.mount-timeout=30,_netdev    0 0
+chadserver.lan:/srv/nfs/agents   /mnt/chadserver.lan/agents   nfs4    rw,x-systemd.automount,x-systemd.mount-timeout=30,_netdev    0 0
+chadserver.lan:/srv/nfs/txt      /mnt/chadserver.lan/txt      nfs4    rw,x-systemd.automount,x-systemd.mount-timeout=30,_netdev    0 0
+chadserver.lan:/srv/nfs/z        /mnt/chadserver.lan/z        nfs4    rw,x-systemd.automount,x-systemd.mount-timeout=30,_netdev    0 0
