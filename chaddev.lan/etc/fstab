@@ -13,6 +13,6 @@ UUID=5e0362d1-bd4e-4cde-a538-7ccb15cc95d1	none      	swap      	defaults  	0 0
 # NFS volumes from chadserver.lan.
 chadserver.lan:/srv/nfs/share    /mnt/chadserver.lan/share    nfs4    rw,x-systemd.automount,x-systemd.mount-timeout=30,_netdev    0 0
 chadserver.lan:/srv/nfs/openclaw /mnt/chadserver.lan/openclaw nfs4    rw,x-systemd.automount,x-systemd.mount-timeout=30,_netdev    0 0
-chadserver.lan:/srv/nfs/agents   /mnt/chadserver.lan/agents   nfs4    rw,x-systemd.automount,x-systemd.mount-timeout=30,_netdev    0 0
+chadserver.lan:/srv/nfs/claws   /mnt/chadserver.lan/claws   nfs4    rw,x-systemd.automount,x-systemd.mount-timeout=30,_netdev    0 0
 chadserver.lan:/srv/nfs/txt      /mnt/chadserver.lan/txt      nfs4    rw,x-systemd.automount,x-systemd.mount-timeout=30,_netdev    0 0
 chadserver.lan:/srv/nfs/z        /mnt/chadserver.lan/z        nfs4    rw,x-systemd.automount,x-systemd.mount-timeout=30,_netdev    0 0
