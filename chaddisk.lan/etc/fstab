@@ -29,8 +29,8 @@ UUID=473ffd29-36db-4dba-8f1e-ae20e480ee1d       /mnt/Dauthentik_custom--template
 # /dev/mapper/dockergroup-Dauthentik_data
 UUID=dfc65f62-9d61-4d11-a5d2-8e8df2fcf6b8	/mnt/Dauthentik_data	ext4      	rw,relatime,stripe=4095	0 2
 
-# /dev/mapper/dockergroup-Dagents
-UUID=659f6acb-d221-44fa-843d-8c7e2cea50e2	/mnt/Dagents	ext4      	rw,relatime,stripe=4095	0 2
+# /dev/mapper/dockergroup-Dclaws
+UUID=659f6acb-d221-44fa-843d-8c7e2cea50e2	/mnt/Dclaws	ext4      	rw,relatime,stripe=4095	0 2
 
 # /dev/mapper/dockergroup-Dgitlab
 UUID=cc58e773-fb86-46df-9169-bad48665693d	/mnt/Dgitlab	ext4      	rw,relatime,stripe=4095	0 2
