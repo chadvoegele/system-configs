@@ -17,3 +17,5 @@ MACAddress=24:6e:96:69:4f:e5
 DHCP=yes
 # Git SSH address.
 Address=10.0.0.96/32
+# Internal nginx VIP.
+Address=10.0.0.95/32
