@@ -17,3 +17,5 @@ MACAddress=24:6e:96:69:4f:e5
 DHCP=yes
 # Git SSH address.
 Address=10.0.0.96/32
+# Internal nginx VIP; not a public DNAT target. Outside the DHCP pool.
+Address=10.0.0.95/32
