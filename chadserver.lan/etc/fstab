@@ -20,38 +20,38 @@ UUID=ddea6cd1-e5e1-4886-baee-7373d13bac91	/mnt/z     	ext4      	rw,relatime	0 2
 # /dev/mapper/cryptshare
 UUID=99b02529-9a31-4b53-9d77-f39314c86e1f     	/mnt/share	ext4      	rw,relatime	0 2
 
-# /dev/mapper/dockergroup-Dsynapse_data
-UUID=ec2d1aa1-a44b-4d5b-8c30-6310106e2dc2       /mnt/Dsynapse_data      ext4            rw,relatime     0 2
+# /dev/mapper/dockerssd-Dsynapse_data
+UUID=847a523b-de32-4e3e-8b30-1984a28587e0       /mnt/Dsynapse_data      ext4            rw,relatime     0 2
 
-# /dev/mapper/dockergroup-Dsyncthing
-UUID=177a4a03-a6b3-450a-8ad0-ee591cfd09a6       /mnt/Dsyncthing   ext4            rw,relatime     0 2
+# /dev/mapper/dockerssd-Dsyncthing
+UUID=edd6862a-1590-40df-b165-479dc77d4a12       /mnt/Dsyncthing   ext4            rw,relatime     0 2
 
-# /dev/mapper/dockergroup-Dauthentik_custom----templates
-UUID=f3b47ce1-9853-47b2-b39d-3b6acde67336       /mnt/Dauthentik_custom--templates       ext4            rw,relatime       0 2
+# /dev/mapper/dockerssd-Dauthentik_custom----templates
+UUID=7bbd0d44-fb75-4ac7-a751-a34fc83128d3       /mnt/Dauthentik_custom--templates       ext4            rw,relatime       0 2
 
-# /dev/mapper/dockergroup-Dregistry
-UUID=3177d5e4-e8d8-471e-b79f-08f8235fa3e0       /mnt/Dregistry  ext4            rw,relatime     0 2
+# /dev/mapper/dockerssd-Dregistry
+UUID=8a2c79f3-56ad-4ac7-ab5a-ca9287ed3d7c       /mnt/Dregistry  ext4            rw,relatime     0 2
 
-# /dev/mapper/dockergroup-Djournal
-UUID=63b3c0cf-1ca7-4c2a-bfd3-d31672fb066a       /mnt/Djournal   ext4            rw,relatime     0 2
+# /dev/mapper/dockerssd-Djournal
+UUID=a15763df-ed03-4028-9769-312c64e2f446       /mnt/Djournal   ext4            rw,relatime     0 2
 
-# /dev/mapper/dockergroup-Dopenclaw
-UUID=d1e24b94-d7ab-454c-af81-16e7d49d058b	/mnt/Dopenclaw	ext4      	rw,relatime	0 2
+# /dev/mapper/dockerssd-Dopenclaw
+UUID=7d7570f1-7650-4901-8194-79f645681ef2	/mnt/Dopenclaw	ext4      	rw,relatime	0 2
 
 /mnt/Dopenclaw/Sync/openclaw	/srv/nfs/openclaw	none      	rw,bind   	0 0
 /mnt/share/Sync/share	/srv/nfs/share	none      	rw,bind   	0 0
 /mnt/z/Sync	/srv/nfs/z	none      	rw,bind   	0 0
 /home/chad/txt   /srv/nfs/txt    none	rw,bind   	0 0
-/mnt/Dclaws/Sync/claws	/srv/nfs/claws 	none      	rw,bind   	0 0
+/mnt/Dclaws/Sync/claws /srv/nfs/claws 	none      	rw,bind   	0 0
 
-# /dev/mapper/dockergroup-Dforgejo
-UUID=804c856b-3406-4427-a9cd-be14a3e84516	/mnt/Dforgejo	ext4      	rw,relatime	0 2
+# /dev/mapper/dockerssd-Dforgejo
+UUID=14f2dcca-f259-4657-96a4-5b9f4ff62d02	/mnt/Dforgejo	ext4      	rw,relatime	0 2
 
-# /dev/mapper/dockergroup-Dauthentik_data
-UUID=f96bcf68-72fd-4165-a7f8-f1744a728bb1	/mnt/Dauthentik_data	ext4      	rw,relatime	0 2
+# /dev/mapper/dockerssd-Dauthentik_data
+UUID=896d4475-acd1-4fb4-8d95-05b4fc5111ed	/mnt/Dauthentik_data	ext4      	rw,relatime	0 2
 
-# /dev/mapper/dockergroup-Dclaws
-UUID=c738f57e-5fab-4fdf-b98f-9fe7c413fc0c	/mnt/Dclaws	ext4      	rw,relatime	0 2
+# /dev/mapper/dockerssd-Dclaws
+UUID=399d26e7-061b-4a5b-b0f1-3d52794733e6 /mnt/Dclaws	ext4      	rw,relatime	0 2
 
-# /dev/mapper/dockergroup-Dgitlab
-UUID=ad28cada-7b08-4be0-9499-51241a625f9c	/mnt/Dgitlab	ext4      	rw,relatime	0 2
+# /dev/mapper/dockerssd-Dgitlab
+UUID=5b9611a4-8e16-4625-8553-6d2d5ef41e24	/mnt/Dgitlab	ext4      	rw,relatime	0 2
