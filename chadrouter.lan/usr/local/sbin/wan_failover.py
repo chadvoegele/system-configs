@@ -118,7 +118,7 @@ def check_health():
     return frozenset(wan for wan in WANS if check_wan(wan))
 
 
-def get_assignment_rules():
+def get_policy_rules():
     ruleset = json.loads(run("nft", "-j", "list", "ruleset"))
     rules = []
     names_by_mark = {wan.mark: name for name, wan in WANS.items()}
@@ -137,29 +137,29 @@ def get_assignment_rules():
                             for e in rule["expr"]):
                         rules.append((rule, names_by_mark[assignment]))
     if len(rules) != 2 or len({r[0]["chain"] for r in rules}) != 2:
-        raise RuntimeError("Expected two WAN assignment rules; inspect nftables")
+        raise RuntimeError("Expected two WAN policy rules; inspect nftables")
     if len({mode for _, mode in rules}) != 1:
-        raise RuntimeError("WAN assignment rules disagree; inspect nftables")
+        raise RuntimeError("WAN policy rules disagree; inspect nftables")
     return rules
 
 
-def get_override_rules():
+def get_single_wan_policy_routes():
     rules = json.loads(run("ip", "-j", "-4", "rule", "show"))
-    overrides = [r for r in rules if r.get("priority") == POLICY_PRIORITY]
+    routes = [r for r in rules if r.get("priority") == POLICY_PRIORITY]
     allowed_tables = set(WANS) | {wan.table_id for wan in WANS.values()}
-    for rule in overrides:
-        if rule.get("table") not in allowed_tables:
+    for route in routes:
+        if route.get("table") not in allowed_tables:
             raise RuntimeError("Priority 90 is occupied; choose a free priority")
-    return overrides
+    return routes
 
 
 def get_policy():
-    mode = get_assignment_rules()[0][1]
-    overrides = get_override_rules()
-    consistent = (mode == "split" and len(overrides) == 0) or (
-        mode in WANS and len(overrides) == 1
-        and overrides[0]["table"] in (mode, WANS[mode].table_id))
-    return mode if consistent else "inconsistent"
+    policy = get_policy_rules()[0][1]
+    routes = get_single_wan_policy_routes()
+    consistent = (policy == "split" and len(routes) == 0) or (
+        policy in WANS and len(routes) == 1
+        and routes[0]["table"] in (policy, WANS[policy].table_id))
+    return policy if consistent else "inconsistent"
 
 
 def policy_for(health):
@@ -167,9 +167,9 @@ def policy_for(health):
             frozenset({"cable"}): "cable", frozenset(): "outage"}[health]
 
 
-def build_assignment_commands(rules, desired):
+def build_policy_commands(rules, policy):
     value = ("numgen random mod 2 map { 0 : 1, 1 : 2 }"
-             if desired == "split" else str(WANS[desired].mark))
+             if policy == "split" else str(WANS[policy].mark))
     commands = []
     for rule, _ in rules:
         incoming = ('iifname { "enp1s0f1", "wg0" } '
@@ -191,28 +191,28 @@ def delete_connections(*filters):
     LOG.info("conntrack cleanup filters=%s result=%s", filters, result.stderr.strip())
 
 
-def apply_policy(desired):
-    if desired != "split" and desired not in WANS:
-        raise ValueError(f"Cannot apply WAN policy: {desired}")
-    rules = get_assignment_rules()
-    existing = get_override_rules()
-    commands = build_assignment_commands(rules, desired)
+def apply_policy(policy):
+    if policy != "split" and policy not in WANS:
+        raise ValueError(f"Cannot apply WAN policy: {policy}")
+    rules = get_policy_rules()
+    existing = get_single_wan_policy_routes()
+    commands = build_policy_commands(rules, policy)
     run("nft", "-c", "-f", "-", input=commands)
-    desired_tables = (desired, WANS[desired].table_id) if desired in WANS else ()
-    if desired in WANS and not any(
-            rule["table"] in desired_tables for rule in existing):
-        # Install the working route before removing an earlier override.
+    policy_tables = (policy, WANS[policy].table_id) if policy in WANS else ()
+    if policy in WANS and not any(
+            rule["table"] in policy_tables for rule in existing):
+        # Install the working route before removing an earlier policy route.
         run("ip", "-4", "rule", "add", "priority", str(POLICY_PRIORITY),
-            "table", desired)
+            "table", policy)
     for rule in existing:
-        if rule["table"] not in desired_tables:
+        if rule["table"] not in policy_tables:
             run("ip", "-4", "rule", "del", "priority", str(POLICY_PRIORITY),
                 "table", str(rule["table"]))
     run("nft", "-f", "-", input=commands)
-    if desired in WANS:
-        failed = next(wan for wan in WANS if wan != desired)
+    if policy in WANS:
+        failed = next(wan for wan in WANS if wan != policy)
         delete_connections("--mark", str(WANS[failed].mark))
-    LOG.info("applied policy=%s", desired)
+    LOG.info("applied policy=%s", policy)
 
 
 def probe_vpn():
