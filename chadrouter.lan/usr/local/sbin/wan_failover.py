@@ -11,6 +11,7 @@ Dry run makes no routing, firewall, conntrack, or WireGuard changes.
 
 import argparse
 from collections import deque
+from dataclasses import dataclass
 import fcntl
 import http.client
 import json
@@ -26,7 +27,17 @@ import urllib.error
 import urllib.request
 
 LOG = logging.getLogger("wan_failover")
-WANS = {"fiber": ("enp1s0f0", 1), "cable": ("eno1", 2)}
+
+
+@dataclass(frozen=True)
+class Wan:
+    interface: str
+    mark: int
+    table_id: int
+
+
+WANS = {"fiber": Wan(interface="enp1s0f0", mark=1, table_id=100),
+        "cable": Wan(interface="eno1", mark=2, table_id=200)}
 VPN_ENDPOINT = "vpn.voegele.me:51871"
 # Reserved for this script; priority 50 still preserves LAN and tunnel routes.
 POLICY_PRIORITY = 90
@@ -42,13 +53,17 @@ def run(*args, input=None):
 
 
 def open_wan_socket(wan, kind):
-    interface, mark = WANS[wan]
+    config = WANS[wan]
     sock = socket.socket(socket.AF_INET, kind)
-    sock.settimeout(TIMEOUT)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE,
-                    interface.encode() + b"\0")
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_MARK, mark)
-    return sock
+    try:
+        sock.settimeout(TIMEOUT)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE,
+                        config.interface.encode() + b"\0")
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_MARK, config.mark)
+        return sock
+    except Exception:
+        sock.close()
+        raise
 
 
 class WanHTTPSConnection(http.client.HTTPSConnection):
@@ -106,6 +121,7 @@ def check_health():
 def get_assignment_rules():
     ruleset = json.loads(run("nft", "-j", "list", "ruleset"))
     rules = []
+    names_by_mark = {wan.mark: name for name, wan in WANS.items()}
     for item in ruleset["nftables"]:
         rule = item.get("rule", {})
         if rule.get("chain") in ("prerouting_policy", "output_policy"):
@@ -119,7 +135,7 @@ def get_assignment_rules():
                             "ct" in str(e.get("match", {}).get("left", {}))
                             and e.get("match", {}).get("right") == "new"
                             for e in rule["expr"]):
-                        rules.append((rule, {1: "fiber", 2: "cable"}[assignment]))
+                        rules.append((rule, names_by_mark[assignment]))
     if len(rules) != 2 or len({r[0]["chain"] for r in rules}) != 2:
         raise RuntimeError("Expected two WAN assignment rules; inspect nftables")
     if len({mode for _, mode in rules}) != 1:
@@ -130,8 +146,9 @@ def get_assignment_rules():
 def get_override_rules():
     rules = json.loads(run("ip", "-j", "-4", "rule", "show"))
     overrides = [r for r in rules if r.get("priority") == POLICY_PRIORITY]
+    allowed_tables = set(WANS) | {wan.table_id for wan in WANS.values()}
     for rule in overrides:
-        if rule.get("table") not in ("fiber", "cable", 100, 200):
+        if rule.get("table") not in allowed_tables:
             raise RuntimeError("Priority 90 is occupied; choose a free priority")
     return overrides
 
@@ -139,10 +156,9 @@ def get_override_rules():
 def get_policy():
     mode = get_assignment_rules()[0][1]
     overrides = get_override_rules()
-    expected = {"fiber": ("fiber", 100), "cable": ("cable", 200)}
     consistent = (mode == "split" and len(overrides) == 0) or (
-        mode in expected and len(overrides) == 1
-        and overrides[0]["table"] in expected[mode])
+        mode in WANS and len(overrides) == 1
+        and overrides[0]["table"] in (mode, WANS[mode].table_id))
     return mode if consistent else "inconsistent"
 
 
@@ -153,7 +169,7 @@ def policy_for(health):
 
 def build_assignment_commands(rules, desired):
     value = ("numgen random mod 2 map { 0 : 1, 1 : 2 }"
-             if desired == "split" else str(WANS[desired][1]))
+             if desired == "split" else str(WANS[desired].mark))
     commands = []
     for rule, _ in rules:
         incoming = ('iifname { "enp1s0f1", "wg0" } '
@@ -176,25 +192,26 @@ def delete_connections(*filters):
 
 
 def apply_policy(desired):
+    if desired != "split" and desired not in WANS:
+        raise ValueError(f"Cannot apply WAN policy: {desired}")
     rules = get_assignment_rules()
-    get_override_rules()
+    existing = get_override_rules()
     commands = build_assignment_commands(rules, desired)
     run("nft", "-c", "-f", "-", input=commands)
-    existing = get_override_rules()
+    desired_tables = (desired, WANS[desired].table_id) if desired in WANS else ()
     if desired in WANS and not any(
-            r["table"] in (desired, {"fiber": 100, "cable": 200}[desired])
-            for r in existing):
+            rule["table"] in desired_tables for rule in existing):
         # Install the working route before removing an earlier override.
         run("ip", "-4", "rule", "add", "priority", str(POLICY_PRIORITY),
             "table", desired)
-    for rule in get_override_rules():
-        table = str(rule["table"])
-        if desired == "split" or table not in (desired, str({"fiber": 100, "cable": 200}[desired])):
-            run("ip", "-4", "rule", "del", "priority", str(POLICY_PRIORITY), "table", table)
+    for rule in existing:
+        if rule["table"] not in desired_tables:
+            run("ip", "-4", "rule", "del", "priority", str(POLICY_PRIORITY),
+                "table", str(rule["table"]))
     run("nft", "-f", "-", input=commands)
     if desired in WANS:
         failed = next(wan for wan in WANS if wan != desired)
-        delete_connections("--mark", str(WANS[failed][1]))
+        delete_connections("--mark", str(WANS[failed].mark))
     LOG.info("applied policy=%s", desired)
 
 
