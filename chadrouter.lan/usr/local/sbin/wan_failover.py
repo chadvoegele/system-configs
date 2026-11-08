@@ -241,7 +241,7 @@ def ensure_vpn(dry_run):
         LOG.warning("VPN recovery attempted; awaiting tunnel reachability")
 
 
-def reconcile(history, dry_run, check_vpn=True):
+def reconcile(history, dry_run):
     health = check_health()
     desired = policy_for(health)
     current = get_policy()
@@ -254,7 +254,7 @@ def reconcile(history, dry_run, check_vpn=True):
             LOG.info("DRY RUN: would apply policy=%s", desired)
         else:
             apply_policy(desired)
-    if stable and desired != "outage" and (check_vpn or desired != current):
+    if health:
         ensure_vpn(dry_run)
 
 
@@ -302,14 +302,10 @@ def main():
         history = deque(maxlen=args.samples)
         LOG.info("started dry_run=%s interval=%s samples=%s", args.dry_run,
                  args.interval, args.samples)
-        next_vpn_check = 0
         while True:
             started = time.monotonic()
             try:
-                check_vpn = started >= next_vpn_check
-                reconcile(history, args.dry_run, check_vpn)
-                if check_vpn and len(history) == history.maxlen:
-                    next_vpn_check = started + 30
+                reconcile(history, args.dry_run)
             except Exception:
                 history.clear()
                 LOG.exception("Check failed; inspect configuration and command errors")
