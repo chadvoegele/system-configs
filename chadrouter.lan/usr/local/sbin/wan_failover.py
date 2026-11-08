@@ -144,7 +144,7 @@ def get_policy_rules():
     return rules
 
 
-def get_single_wan_policy_routes():
+def get_policy_routes():
     rules = json.loads(run("ip", "-j", "-4", "rule", "show"))
     routes = [r for r in rules if r.get("priority") == POLICY_PRIORITY]
     allowed_tables = {wan.name for wan in WANS} | {wan.table_id for wan in WANS}
@@ -154,14 +154,26 @@ def get_single_wan_policy_routes():
     return routes
 
 
-def get_policy():
-    policy = get_policy_rules()[0][1]
-    routes = get_single_wan_policy_routes()
-    wan = next((wan for wan in WANS if wan.name == policy), None)
-    consistent = (policy == "split" and len(routes) == 0) or (
-        wan is not None and len(routes) == 1
-        and routes[0]["table"] in (wan.name, wan.table_id))
-    return policy if consistent else "inconsistent"
+def route_matches(route, wan):
+    return (route["table"] in (wan.name, wan.table_id)
+            and route.get("src", "all") == "all"
+            and route.get("dst", "all") == "all"
+            and route.keys() <= {"priority", "table", "src", "dst", "protocol"})
+
+
+def policy_matches(desired):
+    if desired not in {"split", "fiber", "cable"}:
+        raise ValueError(f"Cannot match WAN policy: {desired}")
+    rules = get_policy_rules()
+    routes = get_policy_routes()
+    logger.info("desired=%s current_assignments=%s current_routes=%s",
+                desired, [policy for _, policy in rules], routes)
+    if any(policy != desired for _, policy in rules):
+        return False
+    if desired == "split":
+        return not routes
+    wan = next(wan for wan in WANS if wan.name == desired)
+    return len(routes) == 1 and route_matches(routes[0], wan)
 
 
 def policy_for(health):
@@ -201,17 +213,17 @@ def apply_policy(policy):
     if policy != "split" and wan is None:
         raise ValueError(f"Cannot apply WAN policy: {policy}")
     rules = get_policy_rules()
-    existing = get_single_wan_policy_routes()
+    existing = get_policy_routes()
     commands = build_policy_commands(rules, policy)
     run("nft", "-c", "-f", "-", input=commands)
-    policy_tables = (wan.name, wan.table_id) if wan is not None else ()
-    if wan is not None and not any(
-            rule["table"] in policy_tables for rule in existing):
-        # Install the working route before removing an earlier policy route.
-        run("ip", "-4", "rule", "add", "priority", str(POLICY_PRIORITY),
-            "table", policy)
-    for rule in existing:
-        if rule["table"] not in policy_tables:
+    routes_match = (wan is not None and len(existing) == 1
+                    and route_matches(existing[0], wan))
+    if not routes_match:
+        if wan is not None:
+            # Install the working route before removing earlier policy routes.
+            run("ip", "-4", "rule", "add", "priority", str(POLICY_PRIORITY),
+                "table", policy)
+        for rule in existing:
             run("ip", "-4", "rule", "del", "priority", str(POLICY_PRIORITY),
                 "table", str(rule["table"]))
     run("nft", "-f", "-", input=commands)
@@ -221,14 +233,14 @@ def apply_policy(policy):
     logger.info("applied policy=%s", policy)
 
 
-def probe_vpn():
+def is_vpn_healthy():
     result = subprocess.run(["ping", "-n", "-I", "wg0", "-c", "1", "-W", "2",
                              "192.168.0.254"], capture_output=True, timeout=4)
     return result.returncode == 0
 
 
 def ensure_vpn(dry_run):
-    if probe_vpn():
+    if is_vpn_healthy():
         logger.debug("VPN healthy")
         return
     if dry_run:
@@ -242,7 +254,7 @@ def ensure_vpn(dry_run):
     vpn_endpoint = "vpn.voegele.me:51871"
     run("wg", "set", "wg0", "peer", peer, "endpoint", vpn_endpoint)
     delete_connections("-p", "udp", "--orig-dst", host, "--dport", port)
-    if probe_vpn():
+    if is_vpn_healthy():
         logger.info("VPN recovered")
     else:
         logger.warning("VPN recovery attempted; awaiting tunnel reachability")
@@ -251,18 +263,24 @@ def ensure_vpn(dry_run):
 def reconcile(history, dry_run):
     health = check_health()
     desired = policy_for(health)
-    current = get_policy()
     history.append(desired)
     stable = len(history) == history.maxlen and len(set(history)) == 1
-    logger.info("health=%s desired=%s current=%s history=%s stable=%s",
-                sorted(health), desired, current, list(history), stable)
-    if stable and desired != "outage" and desired != current:
-        if dry_run:
-            logger.info("DRY RUN: would apply policy=%s", desired)
-        else:
-            apply_policy(desired)
-    if health:
-        ensure_vpn(dry_run)
+    logger.info("health=%s desired=%s history=%s stable=%s",
+                sorted(health), desired, list(history), stable)
+    try:
+        matches = desired != "outage" and policy_matches(desired)
+        if stable and desired != "outage" and not matches:
+            if dry_run:
+                logger.info("DRY RUN: would apply policy=%s", desired)
+            else:
+                apply_policy(desired)
+                if not policy_matches(desired):
+                    raise RuntimeError(
+                        f"Applied policy={desired} but settings still disagree; "
+                        "inspect nftables and priority 90 IP rules")
+    finally:
+        if health:
+            ensure_vpn(dry_run)
 
 
 def check_dependencies():
