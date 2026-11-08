@@ -26,23 +26,21 @@ import time
 import urllib.error
 import urllib.request
 
-LOG = logging.getLogger("wan_failover")
+logger = logging.getLogger("wan_failover")
 
 
 @dataclass(frozen=True)
 class Wan:
+    name: str
     interface: str
     mark: int
     table_id: int
 
 
-WANS = {"fiber": Wan(interface="enp1s0f0", mark=1, table_id=100),
-        "cable": Wan(interface="eno1", mark=2, table_id=200)}
-VPN_ENDPOINT = "vpn.voegele.me:51871"
+WANS = (Wan(name="fiber", interface="enp1s0f0", mark=1, table_id=100),
+        Wan(name="cable", interface="eno1", mark=2, table_id=200))
 # Reserved for this script; priority 50 still preserves LAN and tunnel routes.
 POLICY_PRIORITY = 90
-PROBES = ("https://cp.cloudflare.com/generate_204",
-          "https://connectivitycheck.gstatic.com/generate_204")
 TIMEOUT = 2
 
 
@@ -53,13 +51,12 @@ def run(*args, input=None):
 
 
 def open_wan_socket(wan, kind):
-    config = WANS[wan]
     sock = socket.socket(socket.AF_INET, kind)
     try:
         sock.settimeout(TIMEOUT)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE,
-                        config.interface.encode() + b"\0")
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_MARK, config.mark)
+                        wan.interface.encode() + b"\0")
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_MARK, wan.mark)
         return sock
     except Exception:
         sock.close()
@@ -104,24 +101,27 @@ def probe_endpoint(wan, url):
 
 
 def check_wan(wan):
-    for url in PROBES:
+    probes = ("https://cp.cloudflare.com/generate_204",
+              "https://connectivitycheck.gstatic.com/generate_204")
+    for url in probes:
         try:
             if probe_endpoint(wan, url):
                 return True
-            LOG.warning("probe wan=%s target=%s unexpected response", wan, url)
+            logger.warning("probe wan=%s target=%s unexpected response",
+                           wan.name, url)
         except (OSError, ValueError, urllib.error.URLError) as error:
-            LOG.warning("probe wan=%s target=%s failed: %s", wan, url, error)
+            logger.warning("probe wan=%s target=%s failed: %s",
+                           wan.name, url, error)
     return False
 
 
 def check_health():
-    return frozenset(wan for wan in WANS if check_wan(wan))
+    return frozenset(wan.name for wan in WANS if check_wan(wan))
 
 
 def get_policy_rules():
     ruleset = json.loads(run("nft", "-j", "list", "ruleset"))
     rules = []
-    names_by_mark = {wan.mark: name for name, wan in WANS.items()}
     for item in ruleset["nftables"]:
         rule = item.get("rule", {})
         if rule.get("chain") in ("prerouting_policy", "output_policy"):
@@ -135,7 +135,8 @@ def get_policy_rules():
                             "ct" in str(e.get("match", {}).get("left", {}))
                             and e.get("match", {}).get("right") == "new"
                             for e in rule["expr"]):
-                        rules.append((rule, names_by_mark[assignment]))
+                        rules.append((rule, next(wan.name for wan in WANS
+                                                 if wan.mark == assignment)))
     if len(rules) != 2 or len({r[0]["chain"] for r in rules}) != 2:
         raise RuntimeError("Expected two WAN policy rules; inspect nftables")
     if len({mode for _, mode in rules}) != 1:
@@ -146,7 +147,7 @@ def get_policy_rules():
 def get_single_wan_policy_routes():
     rules = json.loads(run("ip", "-j", "-4", "rule", "show"))
     routes = [r for r in rules if r.get("priority") == POLICY_PRIORITY]
-    allowed_tables = set(WANS) | {wan.table_id for wan in WANS.values()}
+    allowed_tables = {wan.name for wan in WANS} | {wan.table_id for wan in WANS}
     for route in routes:
         if route.get("table") not in allowed_tables:
             raise RuntimeError("Priority 90 is occupied; choose a free priority")
@@ -156,20 +157,23 @@ def get_single_wan_policy_routes():
 def get_policy():
     policy = get_policy_rules()[0][1]
     routes = get_single_wan_policy_routes()
+    wan = next((wan for wan in WANS if wan.name == policy), None)
     consistent = (policy == "split" and len(routes) == 0) or (
-        policy in WANS and len(routes) == 1
-        and routes[0]["table"] in (policy, WANS[policy].table_id))
+        wan is not None and len(routes) == 1
+        and routes[0]["table"] in (wan.name, wan.table_id))
     return policy if consistent else "inconsistent"
 
 
 def policy_for(health):
-    return {frozenset(WANS): "split", frozenset({"fiber"}): "fiber",
-            frozenset({"cable"}): "cable", frozenset(): "outage"}[health]
+    return {frozenset(wan.name for wan in WANS): "split",
+            frozenset({"fiber"}): "fiber", frozenset({"cable"}): "cable",
+            frozenset(): "outage"}[health]
 
 
 def build_policy_commands(rules, policy):
     value = ("numgen random mod 2 map { 0 : 1, 1 : 2 }"
-             if policy == "split" else str(WANS[policy].mark))
+             if policy == "split" else str(next(wan.mark for wan in WANS
+                                               if wan.name == policy)))
     commands = []
     for rule, _ in rules:
         incoming = ('iifname { "enp1s0f1", "wg0" } '
@@ -188,18 +192,20 @@ def delete_connections(*filters):
     if result.returncode not in (0, 1) or (
             result.returncode == 1 and "0 flow entries" not in result.stderr):
         raise RuntimeError(f"conntrack cleanup failed: {result.stderr.strip()}")
-    LOG.info("conntrack cleanup filters=%s result=%s", filters, result.stderr.strip())
+    logger.info("conntrack cleanup filters=%s result=%s",
+                filters, result.stderr.strip())
 
 
 def apply_policy(policy):
-    if policy != "split" and policy not in WANS:
+    wan = next((wan for wan in WANS if wan.name == policy), None)
+    if policy != "split" and wan is None:
         raise ValueError(f"Cannot apply WAN policy: {policy}")
     rules = get_policy_rules()
     existing = get_single_wan_policy_routes()
     commands = build_policy_commands(rules, policy)
     run("nft", "-c", "-f", "-", input=commands)
-    policy_tables = (policy, WANS[policy].table_id) if policy in WANS else ()
-    if policy in WANS and not any(
+    policy_tables = (wan.name, wan.table_id) if wan is not None else ()
+    if wan is not None and not any(
             rule["table"] in policy_tables for rule in existing):
         # Install the working route before removing an earlier policy route.
         run("ip", "-4", "rule", "add", "priority", str(POLICY_PRIORITY),
@@ -209,10 +215,10 @@ def apply_policy(policy):
             run("ip", "-4", "rule", "del", "priority", str(POLICY_PRIORITY),
                 "table", str(rule["table"]))
     run("nft", "-f", "-", input=commands)
-    if policy in WANS:
-        failed = next(wan for wan in WANS if wan != policy)
-        delete_connections("--mark", str(WANS[failed].mark))
-    LOG.info("applied policy=%s", policy)
+    if wan is not None:
+        failed = next(other for other in WANS if other.name != policy)
+        delete_connections("--mark", str(failed.mark))
+    logger.info("applied policy=%s", policy)
 
 
 def probe_vpn():
@@ -223,22 +229,23 @@ def probe_vpn():
 
 def ensure_vpn(dry_run):
     if probe_vpn():
-        LOG.debug("VPN healthy")
+        logger.debug("VPN healthy")
         return
     if dry_run:
-        LOG.warning("DRY RUN: would refresh VPN endpoint and clear peer UDP connection")
+        logger.warning("DRY RUN: would refresh VPN endpoint and clear peer UDP connection")
         return
     endpoints = run("wg", "show", "wg0", "endpoints").splitlines()
     if len(endpoints) != 1:
         raise RuntimeError("Expected one wg0 peer; inspect WireGuard configuration")
     peer, endpoint = endpoints[0].split()
     host, port = endpoint.rsplit(":", 1)
-    run("wg", "set", "wg0", "peer", peer, "endpoint", VPN_ENDPOINT)
+    vpn_endpoint = "vpn.voegele.me:51871"
+    run("wg", "set", "wg0", "peer", peer, "endpoint", vpn_endpoint)
     delete_connections("-p", "udp", "--orig-dst", host, "--dport", port)
     if probe_vpn():
-        LOG.info("VPN recovered")
+        logger.info("VPN recovered")
     else:
-        LOG.warning("VPN recovery attempted; awaiting tunnel reachability")
+        logger.warning("VPN recovery attempted; awaiting tunnel reachability")
 
 
 def reconcile(history, dry_run):
@@ -247,11 +254,11 @@ def reconcile(history, dry_run):
     current = get_policy()
     history.append(desired)
     stable = len(history) == history.maxlen and len(set(history)) == 1
-    LOG.info("health=%s desired=%s current=%s history=%s stable=%s",
-             sorted(health), desired, current, list(history), stable)
+    logger.info("health=%s desired=%s current=%s history=%s stable=%s",
+                sorted(health), desired, current, list(history), stable)
     if stable and desired != "outage" and desired != current:
         if dry_run:
-            LOG.info("DRY RUN: would apply policy=%s", desired)
+            logger.info("DRY RUN: would apply policy=%s", desired)
         else:
             apply_policy(desired)
     if health:
@@ -295,20 +302,20 @@ def main():
     try:
         check_dependencies()
     except RuntimeError as error:
-        LOG.error("Startup failed: %s", error)
+        logger.error("Startup failed: %s", error)
         parser.exit(1)
     with open("/run/wan-failover.lock", "w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         history = deque(maxlen=args.samples)
-        LOG.info("started dry_run=%s interval=%s samples=%s", args.dry_run,
-                 args.interval, args.samples)
+        logger.info("started dry_run=%s interval=%s samples=%s", args.dry_run,
+                    args.interval, args.samples)
         while True:
             started = time.monotonic()
             try:
                 reconcile(history, args.dry_run)
             except Exception:
                 history.clear()
-                LOG.exception("Check failed; inspect configuration and command errors")
+                logger.exception("Check failed; inspect configuration and command errors")
             time.sleep(max(0, args.interval - (time.monotonic() - started)))
 
 
