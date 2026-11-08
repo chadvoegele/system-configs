@@ -6,7 +6,7 @@ After=network-online.target nftables.service wg-quick@wg0.service
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/bin/python3 /usr/local/sbin/wan_failover.py
+ExecStart=/usr/bin/python /usr/local/sbin/wan_failover.py
 Restart=on-failure
 RestartSec=5
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """chadrouter.lan WAN health reconciler; run locally on the router as root.
 
 Flow: WAN-pinned HTTPS probes -> health -> five observations -> host policy
