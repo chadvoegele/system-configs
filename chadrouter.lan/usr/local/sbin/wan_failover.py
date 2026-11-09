@@ -105,7 +105,7 @@ def check_health():
     return frozenset(wan.name for wan in WANS if is_wan_healthy(wan))
 
 
-def get_policy_rules():
+def get_firewall_policy_rules():
     ruleset = json.loads(run("nft", "-j", "list", "ruleset"))
     rules = []
     for item in ruleset["nftables"]:
@@ -130,7 +130,7 @@ def get_policy_rules():
     return rules
 
 
-def get_policy_routes():
+def get_routing_policy_rules():
     rules = json.loads(run("ip", "-j", "-4", "rule", "show"))
     routes = [r for r in rules if r.get("priority") == POLICY_PRIORITY]
     allowed_tables = {wan.name for wan in WANS} | {wan.table_id for wan in WANS}
@@ -140,18 +140,18 @@ def get_policy_routes():
     return routes
 
 
-def route_matches(route, wan):
+def does_route_select_wan(route, wan):
     return (route["table"] in (wan.name, wan.table_id)
             and route.get("src", "all") == "all"
             and route.get("dst", "all") == "all"
             and route.keys() <= {"priority", "table", "src", "dst", "protocol"})
 
 
-def policy_matches(desired):
+def does_policy_match_host_config(desired):
     if desired not in {"split", "fiber", "cable"}:
         raise ValueError(f"Cannot match WAN policy: {desired}")
-    rules = get_policy_rules()
-    routes = get_policy_routes()
+    rules = get_firewall_policy_rules()
+    routes = get_routing_policy_rules()
     logger.info("desired=%s current_assignments=%s current_routes=%s",
                 desired, [policy for _, policy in rules], routes)
     if any(policy != desired for _, policy in rules):
@@ -159,10 +159,10 @@ def policy_matches(desired):
     if desired == "split":
         return not routes
     wan = next(wan for wan in WANS if wan.name == desired)
-    return len(routes) == 1 and route_matches(routes[0], wan)
+    return len(routes) == 1 and does_route_select_wan(routes[0], wan)
 
 
-def policy_for(health):
+def select_policy_for_health(health):
     return {frozenset(wan.name for wan in WANS): "split",
             frozenset({"fiber"}): "fiber", frozenset({"cable"}): "cable",
             frozenset(): "outage"}[health]
@@ -197,12 +197,12 @@ def apply_policy(policy):
     wan = next((wan for wan in WANS if wan.name == policy), None)
     if policy != "split" and wan is None:
         raise ValueError(f"Cannot apply WAN policy: {policy}")
-    rules = get_policy_rules()
-    existing = get_policy_routes()
+    rules = get_firewall_policy_rules()
+    existing = get_routing_policy_rules()
     commands = build_policy_commands(rules, policy)
     run("nft", "-c", "-f", "-", input=commands)
     routes_match = (wan is not None and len(existing) == 1
-                    and route_matches(existing[0], wan))
+                    and does_route_select_wan(existing[0], wan))
     if not routes_match:
         if wan is not None:
             run("ip", "-4", "rule", "add", "priority", str(POLICY_PRIORITY),
@@ -246,19 +246,19 @@ def ensure_vpn(dry_run):
 
 def reconcile(history, dry_run):
     health = check_health()
-    desired = policy_for(health)
+    desired = select_policy_for_health(health)
     history.append(desired)
     stable = len(history) == history.maxlen and len(set(history)) == 1
     logger.info("health=%s desired=%s history=%s stable=%s",
                 sorted(health), desired, list(history), stable)
     try:
-        matches = desired != "outage" and policy_matches(desired)
+        matches = desired != "outage" and does_policy_match_host_config(desired)
         if stable and desired != "outage" and not matches:
             if dry_run:
                 logger.info("DRY RUN: would apply policy=%s", desired)
             else:
                 apply_policy(desired)
-                if not policy_matches(desired):
+                if not does_policy_match_host_config(desired):
                     raise RuntimeError(
                         f"Applied policy={desired} but settings still disagree; "
                         "inspect nftables and priority 90 IP rules")
