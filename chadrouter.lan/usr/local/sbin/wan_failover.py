@@ -79,19 +79,27 @@ class WanHTTPSHandler(urllib.request.HTTPSHandler):
         return self.do_open(connect, request, context=self._context)
 
 
-def can_wan_connect_to_url(wan, url):
+def can_wan_connect_to_url(wan, url, expected_status=204, expected_body=None):
     opener = urllib.request.build_opener(
         urllib.request.ProxyHandler({}), WanHTTPSHandler(wan))
     with opener.open(url, timeout=TIMEOUT) as response:
-        return response.status == 204 and response.url == url
+        if response.status != expected_status or response.url != url:
+            return False
+        if expected_body is None:
+            return True
+        return response.read(len(expected_body) + 2).strip() == expected_body
 
 
 def is_wan_healthy(wan):
-    probes = ("https://cp.cloudflare.com/generate_204",
-              "https://connectivitycheck.gstatic.com/generate_204")
-    for url in probes:
+    probes = (
+        ("https://cp.cloudflare.com/generate_204", 204, None),
+        ("https://connectivitycheck.gstatic.com/generate_204", 204, None),
+        ("https://www.apple.com/library/test/success.html", 200,
+         b"<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>"),
+    )
+    for url, expected_status, expected_body in probes:
         try:
-            if can_wan_connect_to_url(wan, url):
+            if can_wan_connect_to_url(wan, url, expected_status, expected_body):
                 return True
             logger.warning("probe wan=%s target=%s unexpected response",
                            wan.name, url)
@@ -295,7 +303,7 @@ def check_dependencies():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--interval", type=float, default=1)
+    parser.add_argument("--interval", type=float, default=30)
     parser.add_argument("--samples", type=int, default=5)
     parser.add_argument("--log-file", default="/var/log/wan-failover.log")
     args = parser.parse_args()
