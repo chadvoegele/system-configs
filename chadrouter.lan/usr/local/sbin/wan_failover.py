@@ -1,14 +1,4 @@
 #!/usr/bin/env python
-"""chadrouter.lan WAN health reconciler; run locally on the router as root.
-
-Flow: WAN-pinned HTTPS probes -> health -> five observations -> host policy
-      -> routing/firewall update -> targeted conntrack cleanup -> VPN check
-
-Requirements: Python 3, iproute2, nftables, conntrack-tools, wireguard-tools, ping.
-Review before deployment. Runtime changes are not persisted to networkd/nftables.
-Dry run makes no routing, firewall, conntrack, or WireGuard changes.
-"""
-
 import argparse
 from collections import deque
 from dataclasses import dataclass
@@ -39,7 +29,6 @@ class Wan:
 
 WANS = (Wan(name="fiber", interface="enp1s0f0", mark=1, table_id=100),
         Wan(name="cable", interface="eno1", mark=2, table_id=200))
-# Reserved for this script; priority 50 still preserves LAN and tunnel routes.
 POLICY_PRIORITY = 90
 TIMEOUT = 2
 
@@ -64,8 +53,6 @@ def open_wan_socket(wan, kind):
 
 
 class WanHTTPSConnection(http.client.HTTPSConnection):
-    """Keep urllib's HTTP/TLS handling while selecting the outgoing interface."""
-
     def __init__(self, host, *, wan, **kwargs):
         super().__init__(host, **kwargs)
         self.wan = wan
@@ -92,20 +79,19 @@ class WanHTTPSHandler(urllib.request.HTTPSHandler):
         return self.do_open(connect, request, context=self._context)
 
 
-def probe_endpoint(wan, url):
-    # Bypass environment proxies; otherwise the proxy could mask a failed WAN.
+def can_wan_connect_to_url(wan, url):
     opener = urllib.request.build_opener(
         urllib.request.ProxyHandler({}), WanHTTPSHandler(wan))
     with opener.open(url, timeout=TIMEOUT) as response:
         return response.status == 204 and response.url == url
 
 
-def check_wan(wan):
+def is_wan_healthy(wan):
     probes = ("https://cp.cloudflare.com/generate_204",
               "https://connectivitycheck.gstatic.com/generate_204")
     for url in probes:
         try:
-            if probe_endpoint(wan, url):
+            if can_wan_connect_to_url(wan, url):
                 return True
             logger.warning("probe wan=%s target=%s unexpected response",
                            wan.name, url)
@@ -116,7 +102,7 @@ def check_wan(wan):
 
 
 def check_health():
-    return frozenset(wan.name for wan in WANS if check_wan(wan))
+    return frozenset(wan.name for wan in WANS if is_wan_healthy(wan))
 
 
 def get_policy_rules():
@@ -200,7 +186,6 @@ def build_policy_commands(rules, policy):
 def delete_connections(*filters):
     result = subprocess.run(["conntrack", "-D", *filters], capture_output=True,
                             text=True, timeout=10)
-    # conntrack returns 1 when no matching entries exist.
     if result.returncode not in (0, 1) or (
             result.returncode == 1 and "0 flow entries" not in result.stderr):
         raise RuntimeError(f"conntrack cleanup failed: {result.stderr.strip()}")
@@ -220,7 +205,6 @@ def apply_policy(policy):
                     and route_matches(existing[0], wan))
     if not routes_match:
         if wan is not None:
-            # Install the working route before removing earlier policy routes.
             run("ip", "-4", "rule", "add", "priority", str(POLICY_PRIORITY),
                 "table", policy)
         for rule in existing:
@@ -301,7 +285,7 @@ def check_dependencies():
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--interval", type=float, default=1)
     parser.add_argument("--samples", type=int, default=5)
