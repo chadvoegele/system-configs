@@ -163,9 +163,14 @@ def does_policy_match_host_config(desired):
 
 
 def select_policy_for_health(health):
-    return {frozenset(wan.name for wan in WANS): "split",
-            frozenset({"fiber"}): "fiber", frozenset({"cable"}): "cable",
-            frozenset(): "outage"}[health]
+    if "fiber" in health and "cable" in health:
+        return "split"
+    elif "fiber" in health:
+        return "fiber"
+    elif "cable" in health:
+        return "cable"
+    else:
+        return "outage"
 
 
 def build_policy_commands(rules, policy):
