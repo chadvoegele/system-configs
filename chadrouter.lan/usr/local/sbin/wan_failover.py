@@ -199,24 +199,27 @@ def delete_connections(*filters):
 
 
 def apply_policy(policy):
-    wan = next((wan for wan in WANS if wan.name == policy), None)
-    if policy != "split" and wan is None:
+    if policy != "split" and all(wan.name != policy for wan in WANS):
         raise ValueError(f"Cannot apply WAN policy: {policy}")
     rules = get_firewall_policy_rules()
     existing = get_routing_policy_rules()
     commands = build_policy_commands(rules, policy)
     run("nft", "-c", "-f", "-", input=commands)
-    routes_match = (wan is not None and len(existing) == 1
-                    and does_route_select_wan(existing[0], wan))
+    if policy == "split":
+        routes_match = not existing
+    else:
+        wan = next(wan for wan in WANS if wan.name == policy)
+        routes_match = (len(existing) == 1
+                        and does_route_select_wan(existing[0], wan))
     if not routes_match:
-        if wan is not None:
+        if policy != "split":
             run("ip", "-4", "rule", "add", "priority", str(POLICY_PRIORITY),
                 "table", policy)
         for rule in existing:
             run("ip", "-4", "rule", "del", "priority", str(POLICY_PRIORITY),
                 "table", str(rule["table"]))
     run("nft", "-f", "-", input=commands)
-    if wan is not None:
+    if policy != "split":
         failed = next(other for other in WANS if other.name != policy)
         delete_connections("--mark", str(failed.mark))
     logger.info("applied policy=%s", policy)
